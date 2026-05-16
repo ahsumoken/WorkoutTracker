@@ -1,4 +1,4 @@
-const CACHE = 'trainlog-v2';
+const CACHE = 'trainlog-v3';
 const ASSETS = [
   './', './index.html', './manifest.json',
   './css/style.css',

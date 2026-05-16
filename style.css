@@ -438,6 +438,8 @@ body { min-height: 100dvh; overflow-x: hidden; }
 .rest-bar-wrap { height: 3px; background: var(--bg-4); }
 .rest-bar { height: 100%; background: var(--accent-blue); transition: width .5s linear; }
 
+.hidden { display: none !important; }
+
 /* ─── MODAL ─── */
 .modal { display: none; }
 .modal:not(.hidden) { position: fixed; inset: 0; z-index: 300; display: flex; align-items: flex-end; }
