@@ -3,41 +3,32 @@
 const Session = (() => {
   let currentType = null;
   let sessionData = {};
-  let startTime = null;
-  let sessionInterval = null;
-  let wakeLock = null;
+  let startTime   = null;
+  let sessionIv   = null;
+  let wl          = null;
 
-  async function acquireWakeLock() {
-    if ('wakeLock' in navigator) {
-      try {
-        wakeLock = await navigator.wakeLock.request('screen');
-      } catch(e) {}
-    }
+  async function grabWL() {
+    if ('wakeLock' in navigator) { try { wl = await navigator.wakeLock.request('screen'); } catch(e) {} }
+  }
+  async function dropWL() {
+    if (wl) { try { await wl.release(); } catch(e) {} wl = null; }
   }
 
-  async function releaseWakeLock() {
-    if (wakeLock) {
-      try { await wakeLock.release(); } catch(e) {}
-      wakeLock = null;
-    }
-  }
-
-  function startSessionTimer() {
+  function startClock() {
     startTime = Date.now();
-    const timerEl = document.getElementById('session-timer');
-    sessionInterval = setInterval(() => {
-      const elapsed = Math.floor((Date.now() - startTime) / 1000);
-      const m = Math.floor(elapsed / 60).toString().padStart(2, '0');
-      const s = (elapsed % 60).toString().padStart(2, '0');
-      timerEl.textContent = `${m}:${s}`;
+    const el = document.getElementById('session-timer');
+    sessionIv = setInterval(() => {
+      const s = Math.floor((Date.now() - startTime) / 1000);
+      el.textContent = `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
     }, 1000);
   }
 
-  function stopSessionTimer() {
-    clearInterval(sessionInterval);
-    sessionInterval = null;
+  function stopClock() {
+    clearInterval(sessionIv); sessionIv = null;
     return startTime ? Math.floor((Date.now() - startTime) / 1000) : 0;
   }
+
+  // ── PUBLIC: open ──────────────────────────────────────────────────────────
 
   function open(type) {
     currentType = type;
@@ -45,465 +36,434 @@ const Session = (() => {
     const def = SESSION_TYPES[type];
     document.getElementById('session-title').textContent = def.name;
     document.getElementById('session-timer').textContent = '00:00';
-
     const content = document.getElementById('session-content');
     content.innerHTML = '';
 
-    if (def.type === 'gym') renderGym(def, content);
+    if      (def.type === 'gym')    renderGym(def, content);
     else if (def.type === 'circuit') renderCircuit(def, content);
-    else if (def.type === 'snacks') renderSnacks(def, content);
+    else if (def.type === 'snacks')  renderSnacks(def, content);
 
     showScreen('screen-session');
-    startSessionTimer();
-    acquireWakeLock();
+    startClock();
+    grabWL();
   }
 
-  // ── GYM SESSION ────────────────────────────────────────────────────────────
+  // ── GYM ───────────────────────────────────────────────────────────────────
 
   function renderGym(def, container) {
-    const prev = DB.getLastSessionByType(currentType);
+    const prev = DB.getLastByType(currentType);
 
     def.exercises.forEach((ex, i) => {
-      const prevEx = prev ? prev.exercises?.[ex.id] : null;
-      const block = document.createElement('div');
+      const prevEx = prev?.exercises?.[ex.id] || null;
+      const block  = document.createElement('div');
       block.className = 'exercise-block';
 
-      // Determine sets/reps display
-      const setsLabel = `${ex.sets} sets × ${ex.reps}`;
-
       // Header
-      const header = document.createElement('div');
-      header.className = 'exercise-block-header';
+      const hdr = document.createElement('div');
+      hdr.className = 'exercise-block-header';
+      hdr.innerHTML = `
+        <div class="exercise-num">${String(i+1).padStart(2,'0')}</div>
+        <div class="exercise-name-block">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="exercise-name">${ex.name}</div>
+            <div class="pr-badge" id="pr-${ex.id}" style="display:none">↑ PR</div>
+          </div>
+          <div class="exercise-spec">${ex.sets} sets × ${ex.reps}${prevEx ? ` · Vorige: ${prevEx.sets?.[0]?.weight||'?'}kg` : ''}</div>
+        </div>`;
+      block.appendChild(hdr);
 
-      const nameBlock = document.createElement('div');
-      nameBlock.className = 'exercise-name-block';
-      nameBlock.innerHTML = `
-        <div style="display:flex;align-items:center;gap:8px;">
-          <div class="exercise-name">${ex.name}</div>
-          <div class="pr-badge" id="pr-${ex.id}" style="display:none">↑ PR</div>
-        </div>
-        <div class="exercise-spec">${setsLabel}${prevEx ? ` · Vorige: ${prevEx.sets?.[0]?.weight || '?'}kg` : ''}</div>
-      `;
-
-      header.innerHTML = `<div class="exercise-num">${String(i+1).padStart(2,'0')}</div>`;
-      header.appendChild(nameBlock);
-      block.appendChild(header);
-
-      // Sets table
-      const setsWrap = document.createElement('div');
-      setsWrap.className = 'sets-table';
-
-      // Column headers
-      const hdrs = document.createElement('div');
-      hdrs.className = 'set-headers';
-      hdrs.innerHTML = `
+      // Sets
+      const tbl = document.createElement('div');
+      tbl.className = 'sets-table';
+      tbl.innerHTML = `<div class="set-headers">
         <div class="set-label">SET</div>
         <div class="set-label">KG</div>
         <div class="set-label">REPS</div>
         <div class="set-label">RPE</div>
-      `;
-      setsWrap.appendChild(hdrs);
-
-      // Initialize sessionData for this exercise
-      sessionData[ex.id] = { sets: [] };
+      </div>`;
+      sessionData[ex.id] = { sets: [], note: '', name: ex.name };
 
       for (let s = 0; s < ex.sets; s++) {
-        const prevSet = prevEx?.sets?.[s];
+        const ps = prevEx?.sets?.[s];
+        sessionData[ex.id].sets[s] = { weight: '', reps: '', rpe: '' };
         const row = document.createElement('div');
         row.className = 'set-row';
         row.innerHTML = `
           <div class="set-num">${s+1}</div>
-          <input class="set-input" type="number" inputmode="decimal" placeholder="${prevSet?.weight || '—'}"
-            data-ex="${ex.id}" data-set="${s}" data-field="weight">
-          <input class="set-input" type="number" inputmode="numeric" placeholder="${prevSet?.reps || '—'}"
-            data-ex="${ex.id}" data-set="${s}" data-field="reps">
-          <input class="set-input" type="number" inputmode="numeric" placeholder="RPE" min="1" max="10"
-            data-ex="${ex.id}" data-set="${s}" data-field="rpe" style="font-size:13px;">
-        `;
-
-        sessionData[ex.id].sets[s] = { weight: '', reps: '', rpe: '' };
-
-        // Input listeners
+          <input class="set-input" type="number" inputmode="decimal" placeholder="${ps?.weight||'—'}" data-ex="${ex.id}" data-s="${s}" data-f="weight">
+          <input class="set-input" type="number" inputmode="numeric" placeholder="${ps?.reps||'—'}" data-ex="${ex.id}" data-s="${s}" data-f="reps">
+          <input class="set-input" type="number" inputmode="numeric" placeholder="RPE" min="1" max="10" data-ex="${ex.id}" data-s="${s}" data-f="rpe" style="font-size:13px">`;
         row.querySelectorAll('.set-input').forEach(inp => {
           inp.addEventListener('input', () => {
-            const field = inp.dataset.field;
-            const setIdx = parseInt(inp.dataset.set);
-            sessionData[ex.id].sets[setIdx][field] = inp.value;
-            checkImprovement(ex.id, prevEx);
+            sessionData[ex.id].sets[parseInt(inp.dataset.s)][inp.dataset.f] = inp.value;
+            checkPR(ex.id, prevEx);
           });
         });
-
-        setsWrap.appendChild(row);
+        tbl.appendChild(row);
       }
-      block.appendChild(setsWrap);
+      block.appendChild(tbl);
 
-      // Footer: note
-      const footer = document.createElement('div');
-      footer.className = 'exercise-footer';
-      footer.innerHTML = `
-        <div style="flex:1">
-          <textarea class="note-input" placeholder="Notitie (optioneel)..."
-            data-ex="${ex.id}"></textarea>
-        </div>
-      `;
-      footer.querySelector('textarea').addEventListener('input', e => {
-        sessionData[ex.id].note = e.target.value;
-      });
-      block.appendChild(footer);
-
+      // Note
+      const foot = document.createElement('div');
+      foot.className = 'exercise-footer';
+      foot.innerHTML = `<textarea class="note-input" placeholder="Notitie..." data-ex="${ex.id}"></textarea>`;
+      foot.querySelector('textarea').addEventListener('input', e => { sessionData[ex.id].note = e.target.value; });
+      block.appendChild(foot);
       container.appendChild(block);
     });
 
-    // Global RPE + session note
-    container.appendChild(buildSessionFooter());
+    container.appendChild(gymFooter());
   }
 
-  function checkImprovement(exId, prevEx) {
+  function checkPR(exId, prevEx) {
     if (!prevEx) return;
-    const current = sessionData[exId];
-    const prBadge = document.getElementById(`pr-${exId}`);
-    if (!prBadge) return;
-
-    let improved = false;
-    current.sets.forEach((set, i) => {
-      const prev = prevEx.sets?.[i];
-      if (!prev) return;
-      if (parseFloat(set.weight) > parseFloat(prev.weight)) improved = true;
-      if (parseInt(set.reps) > parseInt(prev.reps)) improved = true;
+    const badge = document.getElementById(`pr-${exId}`);
+    if (!badge) return;
+    const improved = sessionData[exId].sets.some((set, i) => {
+      const p = prevEx.sets?.[i];
+      if (!p) return false;
+      return parseFloat(set.weight) > parseFloat(p.weight||0) || parseInt(set.reps) > parseInt(p.reps||0);
     });
-
-    prBadge.style.display = improved ? '' : 'none';
+    badge.style.display = improved ? '' : 'none';
   }
 
-  // ── CIRCUIT SESSION ────────────────────────────────────────────────────────
+  function gymFooter() {
+    const d = document.createElement('div');
+    d.style.marginTop = '8px';
+    d.innerHTML = `
+      <div class="circuit-block">
+        <div class="circuit-log">
+          <div class="field-group"><label>SESSIE RPE (1-10)</label>
+            <input type="number" inputmode="numeric" id="gym-rpe" placeholder="7" min="1" max="10"></div>
+          <div class="field-group"><label>SESSIE NOTITIE</label>
+            <textarea id="gym-note" placeholder="Algemene notitie..." style="background:var(--bg-3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;padding:9px 12px;width:100%;resize:none;height:80px;"></textarea>
+          </div>
+        </div>
+      </div>`;
+    d.querySelector('#gym-rpe').addEventListener('input',  e => { sessionData._rpe  = parseInt(e.target.value)||null; });
+    d.querySelector('#gym-note').addEventListener('input', e => { sessionData._note = e.target.value; });
+    return d;
+  }
+
+  // ── CIRCUIT ───────────────────────────────────────────────────────────────
 
   function renderCircuit(def, container) {
-    const prev = DB.getLastCircuitByType(currentType);
-    sessionData = { rounds: 0, weights: {}, rpe: 5, note: '', finisher: [] };
+    const prev = DB.getLastByType(currentType);
+    sessionData = { rounds: 0, rpe: null, note: '', finisher: [] };
 
-    // Timer start block
+    // Timer launch block
     const startBlock = document.createElement('div');
     startBlock.className = 'circuit-block';
+    const totalSets = def.exercises.length * def.rounds;
     startBlock.innerHTML = `
       <div class="circuit-start-row">
         <div>
           <div class="circuit-start-label">${def.name}</div>
-          <div class="circuit-sub">${def.totalSets || def.exercises.length * def.rounds} sets · ${def.workSec}s/${def.restSec}s · ${def.rounds} ronden · ${def.roundRestSec}s rusttijd</div>
+          <div class="circuit-sub">${totalSets} sets · ${def.workSec}s werk / ${def.restSec}s rust · ${def.rounds} ronden · ${def.roundRestSec}s rondrust</div>
         </div>
-        <button class="btn-start-timer" id="btn-circuit-timer">▶ START</button>
-      </div>
-    `;
-
-    startBlock.querySelector('#btn-circuit-timer').addEventListener('click', () => {
-      const totalSets = def.exercises.length * def.rounds;
+        <button class="btn-start-timer" id="btn-cir-start">▶ START</button>
+      </div>`;
+    startBlock.querySelector('#btn-cir-start').addEventListener('click', () => {
       Timer.start({
-        totalSets,
-        totalRounds: def.rounds,
-        workSec: def.workSec,
-        restSec: def.restSec,
-        roundRestSec: def.roundRestSec,
+        totalSets, totalRounds: def.rounds,
+        workSec: def.workSec, restSec: def.restSec, roundRestSec: def.roundRestSec,
         exercises: def.exercises.map(e => e.name),
-        onComplete: () => { showToast('Circuit klaar! 🔥'); }
+        onComplete: () => showToast('Circuit klaar! 🔥')
       });
     });
 
-    // Exercises list
+    // Exercise list
     const exBlock = document.createElement('div');
     exBlock.className = 'circuit-block';
-    const exHeader = document.createElement('div');
-    exHeader.style.cssText = 'padding:12px 14px;border-bottom:1px solid var(--border);';
-    exHeader.innerHTML = `<div class="section-title">OEFENINGEN</div>`;
-    exBlock.appendChild(exHeader);
-
-    const exList = document.createElement('div');
-    exList.className = 'circuit-exercises';
+    let exHtml = `<div style="padding:12px 14px;border-bottom:1px solid var(--border)"><div class="section-title">OEFENINGEN</div></div>
+                  <div class="circuit-exercises">`;
     def.exercises.forEach((ex, i) => {
-      const row = document.createElement('div');
-      row.className = 'circuit-ex-row';
-      row.innerHTML = `
+      exHtml += `<div class="circuit-ex-row">
         <div class="circuit-ex-num">${i+1}</div>
         <div class="circuit-ex-name">${ex.name}</div>
         <div class="circuit-ex-weight">${ex.defaultWeight}</div>
-      `;
-      exList.appendChild(row);
+      </div>`;
     });
-    exBlock.appendChild(exList);
+    exHtml += `</div>`;
 
-    // Log area
-    const logArea = document.createElement('div');
-    logArea.className = 'circuit-log';
-
-    const prevRounds = prev?.rounds;
-    const prevBadge = prevRounds ? `<span style="font-size:11px;color:var(--text-3);margin-left:8px;">Vorige: ${prevRounds} ronden</span>` : '';
-
-    logArea.innerHTML = `
+    const prevBadge = prev?.rounds ? ` <span style="font-size:11px;color:var(--text-3)">Vorige: ${prev.rounds}</span>` : '';
+    exHtml += `<div class="circuit-log">
       <div class="circuit-log-grid">
-        <div class="log-field">
-          <label>RONDEN VOLTOOID ${prevBadge}</label>
-          <input type="number" inputmode="numeric" id="circuit-rounds" placeholder="${prevRounds || def.rounds}" min="0" max="${def.rounds}">
-        </div>
-        <div class="log-field">
-          <label>RPE (1-10)</label>
-          <input type="number" inputmode="numeric" id="circuit-rpe" placeholder="7" min="1" max="10">
-        </div>
+        <div class="log-field"><label>RONDEN${prevBadge}</label>
+          <input type="number" inputmode="numeric" id="cir-rounds" placeholder="${def.rounds}" min="0" max="${def.rounds}"></div>
+        <div class="log-field"><label>RPE (1-10)</label>
+          <input type="number" inputmode="numeric" id="cir-rpe" placeholder="7" min="1" max="10"></div>
       </div>
-      <div class="field-group">
-        <label>NOTITIE</label>
-        <textarea style="background:var(--bg-3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;padding:9px 12px;width:100%;resize:none;height:70px;" id="circuit-note" placeholder="Hoe voelde het?"></textarea>
+      <div class="field-group"><label>NOTITIE</label>
+        <textarea id="cir-note" placeholder="Hoe voelde het?" style="background:var(--bg-3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;padding:9px 12px;width:100%;resize:none;height:70px;"></textarea>
       </div>
-    `;
-    exBlock.appendChild(logArea);
+      <div class="improved-hint" id="cir-pr" style="display:none">↑ Meer ronden dan vorige sessie!</div>
+    </div>`;
+    exBlock.innerHTML = exHtml;
+
+    exBlock.querySelector('#cir-rounds').addEventListener('input', e => {
+      sessionData.rounds = parseInt(e.target.value)||0;
+      document.getElementById('cir-pr').style.display =
+        (prev && sessionData.rounds > (prev.rounds||0)) ? 'flex' : 'none';
+    });
+    exBlock.querySelector('#cir-rpe').addEventListener('input',  e => { sessionData.rpe  = parseInt(e.target.value)||null; });
+    exBlock.querySelector('#cir-note').addEventListener('input', e => { sessionData.note = e.target.value; });
+
     container.appendChild(startBlock);
     container.appendChild(exBlock);
 
-    // Progress indicator
-    if (prev) {
-      const prevR = prev.rounds || 0;
-      const indic = document.createElement('div');
-      indic.className = 'improved-hint';
-      indic.id = 'circuit-improve-hint';
-      indic.style.display = 'none';
-      indic.textContent = '↑ Meer ronden dan vorige sessie!';
-      logArea.appendChild(indic);
-    }
-
-    logArea.querySelector('#circuit-rounds')?.addEventListener('input', e => {
-      sessionData.rounds = parseInt(e.target.value) || 0;
-      if (prev && sessionData.rounds > (prev.rounds || 0)) {
-        const h = document.getElementById('circuit-improve-hint');
-        if (h) h.style.display = 'flex';
-      } else {
-        const h = document.getElementById('circuit-improve-hint');
-        if (h) h.style.display = 'none';
-      }
-    });
-
-    logArea.querySelector('#circuit-rpe')?.addEventListener('input', e => {
-      sessionData.rpe = parseInt(e.target.value) || 5;
-    });
-
-    logArea.querySelector('#circuit-note')?.addEventListener('input', e => {
-      sessionData.note = e.target.value;
-    });
-
     // Finisher
     if (def.finisher) {
-      const finBlock = document.createElement('div');
-      finBlock.className = 'finisher-block';
-      finBlock.innerHTML = `<div class="finisher-title">FINISHER</div>`;
-
       sessionData.finisher = def.finisher.map(f => ({ name: f.name, done: false }));
-
-      def.finisher.forEach((fin, i) => {
-        const row = document.createElement('div');
-        row.className = 'finisher-row';
-        row.innerHTML = `${fin.name}`;
-        finBlock.appendChild(row);
-      });
-
-      const checks = document.createElement('div');
-      checks.className = 'finisher-check';
-      def.finisher.forEach((fin, i) => {
+      const fin = document.createElement('div');
+      fin.className = 'finisher-block';
+      fin.innerHTML = `<div class="finisher-title">FINISHER</div>
+        ${def.finisher.map(f=>`<div style="font-size:13px;color:var(--text-2);margin-bottom:3px">${f.name}</div>`).join('')}
+        <div class="finisher-check" id="fin-checks"></div>`;
+      def.finisher.forEach((f, i) => {
         const btn = document.createElement('button');
         btn.className = 'check-btn';
-        btn.textContent = fin.name.replace(/3x10 /, '');
+        btn.textContent = f.name.replace('3×10 ','');
         btn.addEventListener('click', () => {
           sessionData.finisher[i].done = !sessionData.finisher[i].done;
           btn.classList.toggle('done', sessionData.finisher[i].done);
-          btn.textContent = sessionData.finisher[i].done ? '✓ ' + fin.name.replace(/3x10 /,'') : fin.name.replace(/3x10 /,'');
+          btn.textContent = (sessionData.finisher[i].done ? '✓ ' : '') + f.name.replace('3×10 ','');
         });
-        checks.appendChild(btn);
+        fin.querySelector('#fin-checks').appendChild(btn);
       });
-      finBlock.appendChild(checks);
-      container.appendChild(finBlock);
+      container.appendChild(fin);
     }
-
-    container.appendChild(buildSessionFooter(false));
   }
 
-  // ── SNACKS SESSION ─────────────────────────────────────────────────────────
+  // ── SNACKS ────────────────────────────────────────────────────────────────
 
   function renderSnacks(def, container) {
-    sessionData = { snackId: null, rounds: 0, rpe: 5, note: '' };
+    sessionData = { snackId: null, snackName: '', rounds: 0, rpe: null, note: '' };
 
+    // Title
     const title = document.createElement('div');
     title.className = 'section-title';
-    title.textContent = 'KIES EEN SNACK';
     title.style.marginBottom = '10px';
+    title.textContent = 'KIES EEN SNACK';
     container.appendChild(title);
 
-    const opts = document.createElement('div');
-    opts.className = 'snack-options';
+    // Snack option cards
+    const optList = document.createElement('div');
+    optList.className = 'snack-options';
+
+    // Timer area (hidden until snack selected)
+    const timerArea = document.createElement('div');
+    timerArea.className = 'snack-timer-area';
+    timerArea.id = 'snack-timer-area';
 
     def.options.forEach(opt => {
-      const btn = document.createElement('button');
-      btn.className = 'snack-option';
-      btn.dataset.snackId = opt.id;
-      btn.innerHTML = `
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+      const card = document.createElement('button');
+      card.className = 'snack-option';
+      card.dataset.id = opt.id;
+      card.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
           <div class="snack-option-name">${opt.name}</div>
-          <div class="snack-option-desc">${opt.duration}</div>
+          <div class="snack-option-badge">${opt.duration}</div>
         </div>
         <div class="snack-option-desc">${opt.protocol}</div>
-        <div class="snack-exercises">${opt.exercises.join(' · ')}</div>
-      `;
+        <div class="snack-exercises">${opt.exercises.join('<br>')}</div>`;
 
-      btn.addEventListener('click', () => {
-        opts.querySelectorAll('.snack-option').forEach(b => b.classList.remove('selected'));
-        btn.classList.add('selected');
-        sessionData.snackId = opt.id;
+      card.addEventListener('click', () => {
+        optList.querySelectorAll('.snack-option').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        sessionData.snackId   = opt.id;
+        sessionData.snackName = opt.name;
+        buildSnackTimerArea(opt, timerArea);
+        timerArea.classList.add('visible');
       });
 
-      opts.appendChild(btn);
+      optList.appendChild(card);
     });
 
-    container.appendChild(opts);
+    container.appendChild(optList);
+    container.appendChild(timerArea);
 
-    // Log block
+    // Log block (always visible)
     const logBlock = document.createElement('div');
     logBlock.className = 'circuit-block';
     logBlock.innerHTML = `
       <div class="circuit-log">
         <div class="circuit-log-grid">
-          <div class="log-field">
-            <label>RONDEN VOLTOOID</label>
-            <input type="number" inputmode="numeric" id="snack-rounds" placeholder="3" min="0">
-          </div>
-          <div class="log-field">
-            <label>RPE (1-10)</label>
-            <input type="number" inputmode="numeric" id="snack-rpe" placeholder="7" min="1" max="10">
-          </div>
+          <div class="log-field"><label>RONDEN</label>
+            <input type="number" inputmode="numeric" id="snack-rounds" placeholder="3" min="0"></div>
+          <div class="log-field"><label>RPE (1-10)</label>
+            <input type="number" inputmode="numeric" id="snack-rpe" placeholder="7" min="1" max="10"></div>
         </div>
-        <div class="field-group">
-          <label>NOTITIE</label>
-          <textarea style="background:var(--bg-3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;padding:9px 12px;width:100%;resize:none;height:70px;" id="snack-note" placeholder="Hoe voelde het?"></textarea>
+        <div class="field-group"><label>NOTITIE</label>
+          <textarea id="snack-note" placeholder="Hoe voelde het?" style="background:var(--bg-3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;padding:9px 12px;width:100%;resize:none;height:70px;"></textarea>
         </div>
-        <div class="improved-hint" id="snack-improve-hint" style="display:none">↑ Meer ronden / betere RPE dan vorige keer!</div>
-      </div>
-    `;
+        <div class="improved-hint" id="snack-pr" style="display:none">↑ Meer ronden of betere RPE dan vorige keer!</div>
+      </div>`;
 
     logBlock.querySelector('#snack-rounds').addEventListener('input', e => {
-      sessionData.rounds = parseInt(e.target.value) || 0;
-      checkSnackImprovement();
+      sessionData.rounds = parseInt(e.target.value)||0;
+      checkSnackPR();
     });
     logBlock.querySelector('#snack-rpe').addEventListener('input', e => {
-      sessionData.rpe = parseInt(e.target.value) || 5;
-      checkSnackImprovement();
+      sessionData.rpe = parseInt(e.target.value)||null;
+      checkSnackPR();
     });
-    logBlock.querySelector('#snack-note').addEventListener('input', e => {
-      sessionData.note = e.target.value;
-    });
+    logBlock.querySelector('#snack-note').addEventListener('input', e => { sessionData.note = e.target.value; });
 
     container.appendChild(logBlock);
-    container.appendChild(buildSessionFooter(false));
   }
 
-  function checkSnackImprovement() {
-    if (!sessionData.snackId) return;
-    const prev = DB.getLastSnackById(sessionData.snackId);
-    if (!prev) return;
-    const hint = document.getElementById('snack-improve-hint');
-    if (!hint) return;
-    const better = sessionData.rounds > (prev.rounds || 0) || sessionData.rpe < (prev.rpe || 10);
-    hint.style.display = better ? 'flex' : 'none';
-  }
+  function buildSnackTimerArea(opt, area) {
+    area.innerHTML = `<div class="snack-timer-title">TIMER — ${opt.name}</div>`;
 
-  // ── SESSION FOOTER ─────────────────────────────────────────────────────────
+    if (opt.protocol === 'AMRAP') {
+      // Simple stopwatch for AMRAP
+      let running = false, elapsed = 0, iv = null;
+      const display = document.createElement('div');
+      display.style.cssText = 'font-family:"Barlow Condensed",sans-serif;font-size:48px;font-weight:900;color:var(--text);margin-bottom:10px';
+      display.textContent = '10:00';
 
-  function buildSessionFooter(showRPE = true) {
-    const div = document.createElement('div');
-    div.style.marginTop = '8px';
-    if (showRPE) {
-      div.innerHTML = `
-        <div class="circuit-block">
-          <div class="circuit-log">
-            <div class="field-group">
-              <label>SESSIE RPE (1-10)</label>
-              <input type="number" inputmode="numeric" id="session-global-rpe" placeholder="7" min="1" max="10" style="background:var(--bg-3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;padding:9px 12px;width:100%;-webkit-appearance:none;">
-            </div>
-            <div class="field-group">
-              <label>SESSIE NOTITIE</label>
-              <textarea id="session-global-note" placeholder="Algemene notitie voor deze sessie..." style="background:var(--bg-3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;padding:9px 12px;width:100%;resize:none;height:80px;"></textarea>
-            </div>
-          </div>
-        </div>
-      `;
-      div.querySelector('#session-global-rpe').addEventListener('input', e => {
-        sessionData._globalRpe = parseInt(e.target.value) || 5;
+      // Countdown from 10 min
+      let remaining = 600;
+      const btn = document.createElement('button');
+      btn.className = 'btn-start-timer';
+      btn.textContent = '▶ START AMRAP (10 min)';
+      btn.addEventListener('click', () => {
+        if (!running) {
+          running = true; btn.textContent = '■ STOP';
+          iv = setInterval(() => {
+            remaining--;
+            const m = Math.floor(remaining/60), s = remaining%60;
+            display.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+            if (remaining <= 0) { clearInterval(iv); running = false; btn.textContent = '▶ OPNIEUW'; remaining = 600; showToast('AMRAP klaar! 🔥'); }
+          }, 1000);
+        } else {
+          clearInterval(iv); running = false; remaining = 600;
+          display.textContent = '10:00'; btn.textContent = '▶ START AMRAP (10 min)';
+        }
       });
-      div.querySelector('#session-global-note').addEventListener('input', e => {
-        sessionData._globalNote = e.target.value;
+      area.appendChild(display);
+      area.appendChild(btn);
+    } else {
+      // Ronden met rust-pauze
+      let currentRound = 1;
+      const totalRounds = opt.rounds || 3;
+      const restSec = opt.restSec || 30;
+
+      const info = document.createElement('div');
+      info.style.cssText = 'font-family:"Barlow Condensed",sans-serif;font-size:22px;font-weight:800;color:var(--text);margin-bottom:10px';
+      info.textContent = `Ronde ${currentRound} / ${totalRounds}`;
+
+      const exList = document.createElement('div');
+      exList.style.cssText = 'font-size:13px;color:var(--text-2);margin-bottom:12px;line-height:1.7';
+      exList.innerHTML = opt.exercises.map(e => `• ${e}`).join('<br>');
+
+      const btn = document.createElement('button');
+      btn.className = 'btn-start-timer';
+      btn.textContent = currentRound === 1 ? '▶ START' : `▶ RONDE ${currentRound}`;
+
+      btn.addEventListener('click', () => {
+        if (currentRound > totalRounds) return;
+        btn.disabled = true;
+        btn.textContent = 'BEZIG...';
+
+        // After pressing: show rest countdown (except after last round)
+        const doneRound = currentRound;
+        currentRound++;
+        sessionData.rounds = doneRound; // update live
+        document.getElementById('snack-rounds').value = doneRound;
+
+        if (currentRound <= totalRounds && restSec > 0) {
+          info.textContent = `Ronde ${doneRound} klaar!`;
+          RestBanner.show(restSec, () => {
+            if (currentRound <= totalRounds) {
+              info.textContent = `Ronde ${currentRound} / ${totalRounds}`;
+              btn.textContent = `▶ RONDE ${currentRound}`;
+              btn.disabled = false;
+            } else {
+              info.textContent = 'Klaar! 🔥';
+              btn.textContent = '✓ VOLTOOID';
+              btn.style.background = 'var(--accent-green)';
+              showToast(`${opt.name} klaar! 💪`);
+            }
+          });
+        } else if (currentRound <= totalRounds) {
+          info.textContent = `Ronde ${currentRound} / ${totalRounds}`;
+          btn.textContent = `▶ RONDE ${currentRound}`;
+          btn.disabled = false;
+        } else {
+          info.textContent = 'Klaar! 🔥';
+          btn.textContent = '✓ VOLTOOID';
+          btn.style.background = 'var(--accent-green)';
+          showToast(`${opt.name} klaar! 💪`);
+        }
       });
+
+      area.appendChild(info);
+      area.appendChild(exList);
+      area.appendChild(btn);
     }
-    return div;
   }
 
-  // ── COLLECT + SAVE ─────────────────────────────────────────────────────────
-
-  function collectGymData(def) {
-    const exercises = {};
-    def.exercises.forEach(ex => {
-      const sets = [];
-      for (let s = 0; s < ex.sets; s++) {
-        const wEl = document.querySelector(`input[data-ex="${ex.id}"][data-set="${s}"][data-field="weight"]`);
-        const rEl = document.querySelector(`input[data-ex="${ex.id}"][data-set="${s}"][data-field="reps"]`);
-        const rpeEl = document.querySelector(`input[data-ex="${ex.id}"][data-set="${s}"][data-field="rpe"]`);
-        sets.push({
-          weight: wEl?.value || '',
-          reps: rEl?.value || '',
-          rpe: rpeEl?.value || ''
-        });
-      }
-      const noteEl = document.querySelector(`textarea[data-ex="${ex.id}"]`);
-      exercises[ex.id] = { sets, note: noteEl?.value || '', name: ex.name };
-    });
-    return exercises;
+  function checkSnackPR() {
+    if (!sessionData.snackId) return;
+    const prev = DB.getLastSnack(sessionData.snackId);
+    if (!prev) return;
+    const better = sessionData.rounds > (prev.rounds||0) || (sessionData.rpe && prev.rpe && sessionData.rpe < prev.rpe);
+    document.getElementById('snack-pr').style.display = better ? 'flex' : 'none';
   }
+
+  // ── FINISH + SAVE ─────────────────────────────────────────────────────────
 
   function finish() {
     const def = SESSION_TYPES[currentType];
-    const duration = stopSessionTimer();
-    releaseWakeLock();
+    const duration = stopClock();
+    dropWL();
 
-    let finalData = {
-      type: currentType,
-      timestamp: Date.now(),
-      date: new Date().toISOString(),
-      duration,
-    };
+    let data = { type: currentType, timestamp: Date.now(), date: new Date().toISOString(), duration };
 
     if (def.type === 'gym') {
-      const exercises = collectGymData(def);
-      const globalRpe = parseInt(document.getElementById('session-global-rpe')?.value) || null;
-      const globalNote = document.getElementById('session-global-note')?.value || '';
-      finalData = { ...finalData, exercises, globalRpe, globalNote };
+      // Collect set inputs from DOM
+      const exercises = {};
+      def.exercises.forEach(ex => {
+        const sets = [];
+        for (let s = 0; s < ex.sets; s++) {
+          const w = document.querySelector(`input[data-ex="${ex.id}"][data-s="${s}"][data-f="weight"]`);
+          const r = document.querySelector(`input[data-ex="${ex.id}"][data-s="${s}"][data-f="reps"]`);
+          const p = document.querySelector(`input[data-ex="${ex.id}"][data-s="${s}"][data-f="rpe"]`);
+          sets.push({ weight: w?.value||'', reps: r?.value||'', rpe: p?.value||'' });
+        }
+        const n = document.querySelector(`textarea[data-ex="${ex.id}"]`);
+        exercises[ex.id] = { sets, note: n?.value||'', name: ex.name };
+      });
+      data = { ...data, exercises,
+        globalRpe:  parseInt(document.getElementById('gym-rpe')?.value)||null,
+        globalNote: document.getElementById('gym-note')?.value||'' };
+
     } else if (def.type === 'circuit') {
-      const rounds = parseInt(document.getElementById('circuit-rounds')?.value) || sessionData.rounds;
-      const rpe = parseInt(document.getElementById('circuit-rpe')?.value) || sessionData.rpe;
-      const note = document.getElementById('circuit-note')?.value || sessionData.note;
-      finalData = { ...finalData, rounds, rpe, note, finisher: sessionData.finisher || [] };
+      data = { ...data,
+        rounds:   parseInt(document.getElementById('cir-rounds')?.value)||sessionData.rounds,
+        rpe:      parseInt(document.getElementById('cir-rpe')?.value)||sessionData.rpe,
+        note:     document.getElementById('cir-note')?.value||sessionData.note,
+        finisher: sessionData.finisher||[] };
+
     } else if (def.type === 'snacks') {
-      const rounds = parseInt(document.getElementById('snack-rounds')?.value) || sessionData.rounds;
-      const rpe = parseInt(document.getElementById('snack-rpe')?.value) || sessionData.rpe;
-      const note = document.getElementById('snack-note')?.value || sessionData.note;
-      finalData = { ...finalData, snackId: sessionData.snackId, rounds, rpe, note };
+      data = { ...data,
+        snackId:   sessionData.snackId,
+        snackName: sessionData.snackName,
+        rounds:    parseInt(document.getElementById('snack-rounds')?.value)||sessionData.rounds,
+        rpe:       parseInt(document.getElementById('snack-rpe')?.value)||sessionData.rpe,
+        note:      document.getElementById('snack-note')?.value||sessionData.note };
     }
 
-    DB.saveSession(finalData);
+    DB.saveSession(data);
     showToast('Sessie opgeslagen! 💪');
     showScreen('screen-home');
     App.refreshHome();
-
-    // Auto open export
-    setTimeout(() => Export.showForSession(finalData), 600);
+    setTimeout(() => Export.showForSession(data), 600);
   }
 
-  function close() {
-    stopSessionTimer();
-    releaseWakeLock();
-    currentType = null;
-    sessionData = {};
-  }
+  function close() { stopClock(); dropWL(); currentType = null; sessionData = {}; }
 
   return { open, finish, close };
 })();

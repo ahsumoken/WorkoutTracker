@@ -14,7 +14,8 @@
 </head>
 <body>
   <div id="app">
-    <!-- Header -->
+
+    <!-- ═══ HEADER ═══ -->
     <header id="header">
       <div class="header-inner">
         <div class="logo">
@@ -25,71 +26,78 @@
           <button id="btn-history" class="icon-btn" title="Historie">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="12 8 12 12 14 14"/><path d="M3.05 11a9 9 0 1 1 .5 4"/><polyline points="3 16 3.05 11 8 11"/></svg>
           </button>
-          <button id="btn-export" class="icon-btn" title="Exporteer">
+          <button id="btn-export" class="icon-btn" title="Exporteer laatste sessie">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           </button>
         </div>
       </div>
     </header>
 
-    <!-- Home Screen -->
+    <!-- ═══ HOME SCREEN ═══ -->
     <div id="screen-home" class="screen active">
       <div class="home-hero">
-        <div class="hero-stats" id="hero-stats">
-          <!-- filled by JS -->
-        </div>
+        <div class="hero-stats" id="hero-stats"></div>
         <div class="hero-label">VANDAAG</div>
         <div class="hero-date" id="hero-date"></div>
       </div>
 
       <div class="session-grid">
         <div class="section-label">KIES SESSIE</div>
+
         <button class="session-card" data-type="compounds-a">
-          <div class="session-card-accent" style="background:var(--accent-blue)"></div>
+          <div class="session-card-accent" style="background:#3b82f6"></div>
           <div class="session-tag">GYM A</div>
           <div class="session-name">Compounds A</div>
           <div class="session-sub">Squat · Deadlift · Bench · Row · OHP</div>
           <div class="session-sets">6 oefeningen · ~60 min</div>
         </button>
+
         <button class="session-card" data-type="compounds-b">
-          <div class="session-card-accent" style="background:var(--accent-cyan)"></div>
+          <div class="session-card-accent" style="background:#06b6d4"></div>
           <div class="session-tag">GYM B</div>
           <div class="session-name">Compounds B</div>
           <div class="session-sub">RDL · Incline · Pull-up · Press</div>
           <div class="session-sets">7 oefeningen · ~65 min</div>
         </button>
+
         <button class="session-card" data-type="kettlebell">
-          <div class="session-card-accent" style="background:var(--accent-orange)"></div>
+          <div class="session-card-accent" style="background:#f97316"></div>
           <div class="session-tag">CIRCUIT</div>
           <div class="session-name">Kettlebell Circuit</div>
           <div class="session-sub">18 sets · 0:45/0:15 · 3 ronden</div>
           <div class="session-sets">6 oefeningen + finisher</div>
         </button>
+
         <button class="session-card" data-type="alan-a">
-          <div class="session-card-accent" style="background:var(--accent-purple)"></div>
+          <div class="session-card-accent" style="background:#a855f7"></div>
           <div class="session-tag">ALAN A</div>
           <div class="session-name">Alan Hanik A</div>
           <div class="session-sub">Step-up · RDL · Squat · Push-up</div>
           <div class="session-sets">18 sets · 0:45/0:15 · 3 ronden</div>
         </button>
+
         <button class="session-card" data-type="alan-b">
-          <div class="session-card-accent" style="background:var(--accent-green)"></div>
+          <div class="session-card-accent" style="background:#22c55e"></div>
           <div class="session-tag">ALAN B</div>
           <div class="session-name">Alan Hanik B</div>
           <div class="session-sub">Lunge · Swing · Ring Row · Split Squat</div>
           <div class="session-sets">18 sets · 0:45/0:15 · 3 ronden</div>
         </button>
+
         <button class="session-card" data-type="snacks">
-          <div class="session-card-accent" style="background:var(--accent-yellow)"></div>
+          <div class="session-card-accent" style="background:#eab308"></div>
           <div class="session-tag">SNACK</div>
           <div class="session-name">Kettlebell Snacks</div>
           <div class="session-sub">5 mini-workouts · 5-10 min</div>
-          <div class="session-sets">Quick fire sessions</div>
+          <div class="session-sets">Power · Upper · Lower · Core · Full Body</div>
         </button>
+
+        <!-- spacer zodat laatste kaart altijd boven browser-UI uitkomt -->
+        <div style="height:80px"></div>
       </div>
     </div>
 
-    <!-- Session Logger Screen -->
+    <!-- ═══ SESSION SCREEN ═══ -->
     <div id="screen-session" class="screen">
       <div class="session-header">
         <button class="back-btn" id="btn-back">
@@ -101,11 +109,10 @@
         </div>
         <button class="finish-btn" id="btn-finish">KLAAR</button>
       </div>
-
       <div id="session-content"></div>
     </div>
 
-    <!-- History Screen -->
+    <!-- ═══ HISTORY SCREEN ═══ -->
     <div id="screen-history" class="screen">
       <div class="session-header">
         <button class="back-btn" id="btn-back-history">
@@ -118,7 +125,7 @@
       <div id="history-content" class="history-list"></div>
     </div>
 
-    <!-- Export Modal -->
+    <!-- ═══ EXPORT MODAL ═══ -->
     <div id="modal-export" class="modal hidden">
       <div class="modal-backdrop"></div>
       <div class="modal-box">
@@ -134,22 +141,22 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
             Kopieer
           </button>
-          <button id="btn-copy-all" class="btn-secondary">Alle logs kopiëren</button>
+          <button id="btn-copy-all" class="btn-secondary">Alle logs</button>
         </div>
       </div>
     </div>
 
-    <!-- Timer Modal -->
+    <!-- ═══ CIRCUIT TIMER MODAL ═══ -->
     <div id="modal-timer" class="modal hidden">
       <div class="modal-backdrop"></div>
       <div class="modal-box timer-box">
         <div class="timer-phase" id="timer-phase">WERK</div>
-        <div class="timer-display" id="timer-display">0:45</div>
         <div class="timer-progress-wrap">
           <svg class="timer-ring" viewBox="0 0 200 200">
             <circle class="timer-ring-bg" cx="100" cy="100" r="88"/>
             <circle class="timer-ring-fg" id="timer-ring-fg" cx="100" cy="100" r="88"/>
           </svg>
+          <div class="timer-display" id="timer-display">0:45</div>
         </div>
         <div class="timer-meta">
           <div class="timer-set" id="timer-set-info">Set 1 / 18</div>
@@ -165,7 +172,7 @@
       </div>
     </div>
 
-    <!-- Rest Timer (inline banner) -->
+    <!-- ═══ REST BANNER ═══ -->
     <div id="rest-banner" class="rest-banner hidden">
       <div class="rest-inner">
         <span class="rest-label">RUST</span>
@@ -175,7 +182,8 @@
       </div>
       <div class="rest-bar-wrap"><div class="rest-bar" id="rest-bar"></div></div>
     </div>
-  </div>
+
+  </div><!-- /#app -->
 
   <script src="js/data.js"></script>
   <script src="js/timer.js"></script>
