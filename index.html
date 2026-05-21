@@ -943,6 +943,7 @@ const DB = {
 
   getAll() { return this.getSessions(); }
 };
+
 // ─── CIRCUIT TIMER ─────────────────────────────────────────────────────────
 
 const Timer = (() => {
@@ -1068,14 +1069,7 @@ const Timer = (() => {
   }
 
   document.addEventListener('visibilitychange', async () => {
-    if (document.visibilityState === 'visible' && iv && !wl) {
-      // Only re-grab if the session screen is actually active
-      if (document.getElementById('screen-session')?.classList.contains('active')) {
-        await grabWakeLock();
-      }
-    } else if (document.visibilityState === 'hidden') {
-      dropWakeLock();
-    }
+    if (document.visibilityState === 'visible' && iv && !wl) await grabWakeLock();
   });
 
   document.addEventListener('DOMContentLoaded', () => {
