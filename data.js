@@ -52,6 +52,27 @@ const SESSION_TYPES = {
       { name: '3×10 Bench Dips'         },
     ]
   },
+  'kettlebell-b': {
+    name: 'Kettlebell Circuit B',
+    tag: 'CIRCUIT B',
+    color: '#f97316',
+    type: 'circuit',
+    rounds: 3,
+    workSec: 45,
+    restSec: 15,
+    roundRestSec: 90,
+    exercises: [
+      { id: 'sumodl',     name: 'Sumo Deadlift',        defaultWeight: '2×20kg'      },
+      { id: 'bulgsplit',  name: 'Bulgarian Split Squat', defaultWeight: '2×16kg'      },
+      { id: 'pushpress',  name: 'Push Press',            defaultWeight: '2×16kg'      },
+      { id: 'sqthruster', name: 'Squat Thrusters',       defaultWeight: '20kg'        },
+      { id: 'slrdl_l',    name: 'Single Leg RDL (L)',    defaultWeight: '1×20kg'      },
+      { id: 'slrdl_r',    name: 'Single Leg RDL (R)',    defaultWeight: '1×20kg'      },
+      { id: 'sarow_l',    name: 'Single Arm Row (L)',    defaultWeight: '1×20kg'      },
+      { id: 'sarow_r',    name: 'Single Arm Row (R)',    defaultWeight: '1×20kg'      },
+    ],
+    finisher: null
+  },
   'alan-a': {
     name: 'Alan Hanik A',
     tag: 'ALAN A',

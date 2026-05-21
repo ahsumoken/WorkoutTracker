@@ -602,6 +602,16 @@ input[type="number"] { -moz-appearance: textfield; }
         <div class="hero-date" id="hero-date"></div>
       </div>
       <div class="session-grid">
+        <div id="active-session-banner" style="display:none;grid-column:1/-1;background:rgba(249,115,22,0.12);border:1.5px solid rgba(249,115,22,0.4);border-radius:var(--radius);padding:14px 16px;display:none;align-items:center;justify-content:space-between;gap:12px;">
+          <div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.08em;color:var(--accent-orange);">● SESSIE ACTIEF</div>
+            <div id="active-session-name" style="font-size:15px;font-weight:600;margin-top:2px;"></div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button id="btn-resume-session" style="background:var(--accent-orange);color:#fff;border:none;border-radius:var(--radius-sm);padding:8px 16px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;letter-spacing:.06em;cursor:pointer;">HERVAT</button>
+            <button id="btn-discard-session" style="background:var(--bg-3);color:var(--text-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;cursor:pointer;">✕</button>
+          </div>
+        </div>
         <div class="section-label">KIES SESSIE</div>
         <button class="session-card" data-type="compounds-a">
           <div class="session-card-accent" style="background:#3b82f6"></div>
@@ -623,6 +633,13 @@ input[type="number"] { -moz-appearance: textfield; }
           <div class="session-name">Kettlebell Circuit</div>
           <div class="session-sub">18 sets · 0:45/0:15 · 3 ronden</div>
           <div class="session-sets">6 oefeningen + finisher</div>
+        </button>
+        <button class="session-card" data-type="kettlebell-b">
+          <div class="session-card-accent" style="background:#f97316"></div>
+          <div class="session-tag">CIRCUIT B</div>
+          <div class="session-name">Kettlebell Circuit B</div>
+          <div class="session-sub">Sumo · Split Squat · Push Press · Thrusters</div>
+          <div class="session-sets">24 sets · 0:45/0:15 · 3 ronden</div>
         </button>
         <button class="session-card" data-type="alan-a">
           <div class="session-card-accent" style="background:#a855f7"></div>
@@ -785,6 +802,27 @@ const SESSION_TYPES = {
       { name: '3×10 Negatieve Pull-ups' },
       { name: '3×10 Bench Dips'         },
     ]
+  },
+  'kettlebell-b': {
+    name: 'Kettlebell Circuit B',
+    tag: 'CIRCUIT B',
+    color: '#f97316',
+    type: 'circuit',
+    rounds: 3,
+    workSec: 45,
+    restSec: 15,
+    roundRestSec: 90,
+    exercises: [
+      { id: 'sumodl',     name: 'Sumo Deadlift',        defaultWeight: '2×20kg'      },
+      { id: 'bulgsplit',  name: 'Bulgarian Split Squat', defaultWeight: '2×16kg'      },
+      { id: 'pushpress',  name: 'Push Press',            defaultWeight: '2×16kg'      },
+      { id: 'sqthruster', name: 'Squat Thrusters',       defaultWeight: '20kg'        },
+      { id: 'slrdl_l',    name: 'Single Leg RDL (L)',    defaultWeight: '1×20kg'      },
+      { id: 'slrdl_r',    name: 'Single Leg RDL (R)',    defaultWeight: '1×20kg'      },
+      { id: 'sarow_l',    name: 'Single Arm Row (L)',    defaultWeight: '1×20kg'      },
+      { id: 'sarow_r',    name: 'Single Arm Row (R)',    defaultWeight: '1×20kg'      },
+    ],
+    finisher: null
   },
   'alan-a': {
     name: 'Alan Hanik A',
@@ -1030,7 +1068,14 @@ const Timer = (() => {
   }
 
   document.addEventListener('visibilitychange', async () => {
-    if (document.visibilityState === 'visible' && iv && !wl) await grabWakeLock();
+    if (document.visibilityState === 'visible' && iv && !wl) {
+      // Only re-grab if the session screen is actually active
+      if (document.getElementById('screen-session')?.classList.contains('active')) {
+        await grabWakeLock();
+      }
+    } else if (document.visibilityState === 'hidden') {
+      dropWakeLock();
+    }
   });
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -1038,7 +1083,7 @@ const Timer = (() => {
     el('btn-timer-stop').addEventListener('click', stop);
   });
 
-  return { start, stop, pause };
+  return { start, stop, pause, releaseWakeLock: dropWakeLock };
 })();
 
 // ─── REST BANNER ───────────────────────────────────────────────────────────
@@ -1536,9 +1581,26 @@ const Session = (() => {
     setTimeout(() => Export.showForSession(data), 600);
   }
 
-  function close() { stopClock(); dropWL(); currentType = null; sessionData = {}; }
+  function pause() {
+    stopClock();
+    dropWL();
+    Timer.releaseWakeLock();
+    // Don't reset currentType or sessionData — keep them alive
+  }
 
-  return { open, finish, close };
+  function resume() {
+    if (!currentType) return;
+    startClock();
+    grabWL();
+    showScreen('screen-session');
+  }
+
+  function isActive() { return !!currentType; }
+  function activeType() { return currentType; }
+
+  function close() { stopClock(); dropWL(); currentType = null; sessionData = {}; Timer.stop(); RestBanner.hide(); }
+
+  return { open, finish, close, pause, resume, isActive, activeType };
 })();
 const History = (() => {
   function render() {
@@ -1794,11 +1856,27 @@ const App = (() => {
         <div class="hero-stat-val" style="font-size:17px;margin-top:4px">${lastStr}</div>
         <div class="hero-stat-lbl">LAATSTE</div>
       </div>`;
+
+    // Active session banner
+    const banner = document.getElementById('active-session-banner');
+    if (Session.isActive()) {
+      const def = SESSION_TYPES[Session.activeType()];
+      document.getElementById('active-session-name').textContent = def?.name || '';
+      banner.style.display = 'flex';
+    } else {
+      banner.style.display = 'none';
+    }
   }
 
   function bindHome() {
     document.querySelectorAll('.session-card').forEach(card => {
-      card.addEventListener('click', () => Session.open(card.dataset.type));
+      card.addEventListener('click', () => {
+        if (Session.isActive()) {
+          showToast('Herstel of stop eerst de actieve sessie.');
+          return;
+        }
+        Session.open(card.dataset.type);
+      });
     });
     document.getElementById('btn-history').addEventListener('click', () => {
       History.render();
@@ -1809,14 +1887,23 @@ const App = (() => {
       if (!all.length) { showToast('Nog geen sessies gelogd.'); return; }
       Export.showForSession(all[0]);
     });
+    document.getElementById('btn-resume-session').addEventListener('click', () => {
+      Session.resume();
+    });
+    document.getElementById('btn-discard-session').addEventListener('click', () => {
+      if (confirm('Sessie definitief stoppen? Voortgang gaat verloren.')) {
+        Session.close();
+        refreshHome();
+      }
+    });
   }
 
   function bindSession() {
     document.getElementById('btn-back').addEventListener('click', () => {
-      if (confirm('Sessie stoppen? Voortgang gaat verloren.')) {
-        Session.close(); Timer.stop(); RestBanner.hide();
-        showScreen('screen-home');
-      }
+      // Pause: navigate away but keep session alive
+      Session.pause();
+      showScreen('screen-home');
+      refreshHome();
     });
     document.getElementById('btn-finish').addEventListener('click', () => Session.finish());
   }
