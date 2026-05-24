@@ -9,6 +9,7 @@
   <meta name="apple-mobile-web-app-title" content="TrainLog">
   <title>TrainLog</title>
   <link rel="manifest" href="manifest.json">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/nosleep.js/0.12.0/NoSleep.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&display=swap">
   <style>
@@ -629,8 +630,8 @@ input[type="number"] { -moz-appearance: textfield; }
         </button>
         <button class="session-card" data-type="kettlebell">
           <div class="session-card-accent" style="background:#f97316"></div>
-          <div class="session-tag">CIRCUIT</div>
-          <div class="session-name">Kettlebell Circuit</div>
+          <div class="session-tag">CIRCUIT A</div>
+          <div class="session-name">Kettlebell Circuit A</div>
           <div class="session-sub">18 sets · 0:45/0:15 · 3 ronden</div>
           <div class="session-sets">6 oefeningen + finisher</div>
         </button>
@@ -949,6 +950,7 @@ const DB = {
 const Timer = (() => {
   let iv = null;
   let wl = null;
+  let wakeLockEnabled = false;
   let st = null;
   let exNames = [];
   const CIRC = 2 * Math.PI * 88; // r=88
@@ -956,13 +958,35 @@ const Timer = (() => {
   function el(id) { return document.getElementById(id); }
 
   async function grabWakeLock() {
-    if ('wakeLock' in navigator) {
-      try { wl = await navigator.wakeLock.request('screen'); } catch(e) {}
+    if (!('wakeLock' in navigator)) return;
+    if (document.visibilityState !== 'visible') return;
+    wakeLockEnabled = true;
+    try {
+      wl = await navigator.wakeLock.request('screen');
+      wl.addEventListener('release', () => {
+        wl = null;
+        // System released it — re-acquire if we still want it and page is visible
+        if (wakeLockEnabled && document.visibilityState === 'visible') {
+          setTimeout(grabWakeLock, 500);
+        }
+      });
+    } catch(e) {
+      // Battery too low or power save mode — retry after 30s
+      if (wakeLockEnabled) setTimeout(grabWakeLock, 30000);
     }
   }
+
   async function dropWakeLock() {
+    wakeLockEnabled = false;
     if (wl) { try { await wl.release(); } catch(e) {} wl = null; }
   }
+
+  // Re-acquire when page becomes visible again (switching back from other app/tab)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && wakeLockEnabled && !wl) {
+      grabWakeLock();
+    }
+  });
 
   function beep(type) {
     try {
@@ -1068,10 +1092,6 @@ const Timer = (() => {
     el('modal-timer').style.display='none';
   }
 
-  document.addEventListener('visibilitychange', async () => {
-    if (document.visibilityState === 'visible' && iv && !wl) await grabWakeLock();
-  });
-
   document.addEventListener('DOMContentLoaded', () => {
     el('btn-timer-pause').addEventListener('click', pause);
     el('btn-timer-stop').addEventListener('click', stop);
@@ -1117,14 +1137,9 @@ const Session = (() => {
   let sessionData = {};
   let startTime   = null;
   let sessionIv   = null;
-  let wl          = null;
 
-  async function grabWL() {
-    if ('wakeLock' in navigator) { try { wl = await navigator.wakeLock.request('screen'); } catch(e) {} }
-  }
-  async function dropWL() {
-    if (wl) { try { await wl.release(); } catch(e) {} wl = null; }
-  }
+  async function grabWL() { await grabWakeLock(); }
+  async function dropWL() { await dropWakeLock(); }
 
   function startClock() {
     startTime = Date.now();
@@ -1140,24 +1155,83 @@ const Session = (() => {
     return startTime ? Math.floor((Date.now() - startTime) / 1000) : 0;
   }
 
+  const STORAGE_KEY = 'trainlog_active_session';
+
+  function saveState() {
+    if (!currentType) return;
+    // Grab current input values from DOM
+    document.querySelectorAll('[data-ex]').forEach(inp => {
+      const ex = inp.dataset.ex, s = inp.dataset.s, f = inp.dataset.f;
+      if (ex && s !== undefined && f) {
+        if (!sessionData[ex]) sessionData[ex] = { sets: [], note: '', name: ex };
+        if (!sessionData[ex].sets[parseInt(s)]) sessionData[ex].sets[parseInt(s)] = {};
+        sessionData[ex].sets[parseInt(s)][f] = inp.value;
+      }
+    });
+    document.querySelectorAll('[data-ex].note-input, textarea[data-ex]').forEach(ta => {
+      const ex = ta.dataset.ex;
+      if (ex && sessionData[ex]) sessionData[ex].note = ta.value;
+    });
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
+      type: currentType,
+      data: sessionData,
+      elapsed: startTime ? Math.floor((Date.now() - startTime) / 1000) : 0
+    }));
+  }
+
+  function clearState() {
+    sessionStorage.removeItem(STORAGE_KEY);
+  }
+
+  function restoreInputs() {
+    Object.entries(sessionData).forEach(([exId, exData]) => {
+      exData.sets?.forEach((set, si) => {
+        ['weight','reps','rpe'].forEach(f => {
+          const inp = document.querySelector(`[data-ex="${exId}"][data-s="${si}"][data-f="${f}"]`);
+          if (inp && set[f]) inp.value = set[f];
+        });
+      });
+      if (exData.note) {
+        const ta = document.querySelector(`textarea[data-ex="${exId}"]`);
+        if (ta) ta.value = exData.note;
+      }
+    });
+  }
+
   // ── PUBLIC: open ──────────────────────────────────────────────────────────
 
   function open(type) {
+    // Check if resuming existing session
+    const saved = sessionStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.type === type) { resume(); return; }
+      } catch(e) {}
+    }
+
     currentType = type;
     sessionData = {};
+    clearState();
     const def = SESSION_TYPES[type];
     document.getElementById('session-title').textContent = def.name;
     document.getElementById('session-timer').textContent = '00:00';
     const content = document.getElementById('session-content');
     content.innerHTML = '';
 
-    if      (def.type === 'gym')    renderGym(def, content);
+    if      (def.type === 'gym')     renderGym(def, content);
     else if (def.type === 'circuit') renderCircuit(def, content);
     else if (def.type === 'snacks')  renderSnacks(def, content);
+
+    // Save state on every input change
+    document.querySelectorAll('#session-content input, #session-content textarea').forEach(el => {
+      el.addEventListener('input', saveState);
+    });
 
     showScreen('screen-session');
     startClock();
     grabWL();
+    saveState();
   }
 
   // ── GYM ───────────────────────────────────────────────────────────────────
@@ -1569,6 +1643,9 @@ const Session = (() => {
     }
 
     DB.saveSession(data);
+    clearState();
+    currentType = null;
+    sessionData = {};
     showToast('Sessie opgeslagen! 💪');
     showScreen('screen-home');
     App.refreshHome();
@@ -1576,23 +1653,63 @@ const Session = (() => {
   }
 
   function pause() {
+    saveState();
     stopClock();
     dropWL();
     Timer.releaseWakeLock();
-    // Don't reset currentType or sessionData — keep them alive
   }
 
   function resume() {
-    if (!currentType) return;
-    startClock();
-    grabWL();
-    showScreen('screen-session');
+    const saved = sessionStorage.getItem(STORAGE_KEY);
+    if (!saved) return;
+    try {
+      const parsed = JSON.parse(saved);
+      currentType = parsed.type;
+      sessionData = parsed.data || {};
+      const elapsed = parsed.elapsed || 0;
+
+      const def = SESSION_TYPES[currentType];
+      if (!def) return;
+
+      document.getElementById('session-title').textContent = def.name;
+      const content = document.getElementById('session-content');
+      content.innerHTML = '';
+
+      if      (def.type === 'gym')     renderGym(def, content);
+      else if (def.type === 'circuit') renderCircuit(def, content);
+      else if (def.type === 'snacks')  renderSnacks(def, content);
+
+      // Restore all input values
+      restoreInputs();
+
+      // Re-attach save listeners
+      document.querySelectorAll('#session-content input, #session-content textarea').forEach(el => {
+        el.addEventListener('input', saveState);
+      });
+
+      // Resume clock from saved elapsed time
+      startTime = Date.now() - (elapsed * 1000);
+      const timerEl = document.getElementById('session-timer');
+      sessionIv = setInterval(() => {
+        const s = Math.floor((Date.now() - startTime) / 1000);
+        timerEl.textContent = `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+      }, 1000);
+
+      grabWL();
+      showScreen('screen-session');
+    } catch(e) { clearState(); }
   }
 
-  function isActive() { return !!currentType; }
-  function activeType() { return currentType; }
+  function isActive() {
+    if (currentType) return true;
+    return !!sessionStorage.getItem(STORAGE_KEY);
+  }
+  function activeType() {
+    if (currentType) return currentType;
+    try { return JSON.parse(sessionStorage.getItem(STORAGE_KEY))?.type; } catch(e) { return null; }
+  }
 
-  function close() { stopClock(); dropWL(); currentType = null; sessionData = {}; Timer.stop(); RestBanner.hide(); }
+  function close() { stopClock(); dropWL(); currentType = null; sessionData = {}; clearState(); Timer.stop(); RestBanner.hide(); }
 
   return { open, finish, close, pause, resume, isActive, activeType };
 })();
