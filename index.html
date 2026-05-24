@@ -983,8 +983,14 @@ const Timer = (() => {
 
   // Re-acquire when page becomes visible again (switching back from other app/tab)
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible' && wakeLockEnabled && !wl) {
+    if (document.visibilityState === 'visible' && wakeLockEnabled) {
+      // Always re-acquire when returning — system always releases on hide
+      if (wl) { try { wl.release(); } catch(e) {} wl = null; }
       grabWakeLock();
+    } else if (document.visibilityState === 'hidden') {
+      // Don't call drop — just null the reference, system releases it anyway
+      // wakeLockEnabled stays true so we re-acquire on return
+      wl = null;
     }
   });
 
