@@ -13,6 +13,7 @@
 <body class="p-4 md:p-8 max-w-md mx-auto">
 
     <div id="app" class="space-y-6">
+        <!-- Header -->
         <div class="flex justify-between items-center">
             <h1 class="text-3xl font-extrabold tracking-tight">Workouts</h1>
             <button onclick="showCreateWorkoutModal()" class="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition">
@@ -20,9 +21,11 @@
             </button>
         </div>
 
+        <!-- Workout List -->
         <div id="workout-list" class="space-y-4"></div>
     </div>
 
+    <!-- Active Workout Mode -->
     <div id="active-workout-screen" class="hidden fixed inset-0 bg-gray-900 p-6 flex flex-col justify-between z-50">
         <div class="text-center space-y-4">
             <h2 id="active-workout-title" class="text-3xl font-black text-white"></h2>
@@ -34,6 +37,7 @@
             </div>
         </div>
 
+        <!-- Controls -->
         <div class="space-y-4">
             <div class="grid grid-cols-2 gap-4">
                 <button onclick="prevExercise()" id="btn-active-prev" class="p-6 text-xl font-bold uppercase bg-gray-800 rounded-2xl border border-gray-700 disabled:opacity-30">
@@ -49,6 +53,7 @@
         </div>
     </div>
 
+    <!-- Create Workout Modal -->
     <div id="create-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
         <div class="bg-gray-800 border border-gray-700 rounded-2xl w-full max-w-sm p-6 space-y-4">
             <h3 class="text-xl font-bold">Nieuwe Workout</h3>
@@ -61,12 +66,59 @@
     </div>
 
     <script>
-        let workouts = JSON.parse(localStorage.getItem('workouts')) || [];
+        // VASTE DATABASE MET JOUW OEFENINGEN
+        const defaultWorkouts = [
+            {
+                name: "Kettlebell Thuis",
+                exercises: [
+                    { name: "Kettlebell Swing (20 KG)", sets: 4 },
+                    { name: "Kettlebell Goblet Squat (20 KG)", sets: 4 },
+                    { name: "Kettlebell Turkish Get-Up (20 KG)", sets: 4 },
+                    { name: "Kettlebell Snatch (20 KG)", sets: 4 },
+                    { name: "Kettlebell Clean & Press (20 KG)", sets: 4 },
+                    { name: "Kettlebell Thruster (20 KG)", sets: 4 },
+                    { name: "Kettlebell Windmill (20 KG)", sets: 4 },
+                    { name: "Kettlebell TV Bicep Curl (20 KG)", sets: 4 },
+                    { name: "Kettlebell TV Tricep Extension (20 KG)", sets: 4 }
+                ]
+            },
+            {
+                name: "One Gym",
+                exercises: [
+                    { name: "Lat Pulldown (Cable)", sets: 4 },
+                    { name: "Seated Row (Machine)", sets: 4 },
+                    { name: "Incline Bench Press (Smith)", sets: 4 },
+                    { name: "Chest Press (Machine)", sets: 4 },
+                    { name: "Iso-Lateral Row (Machine)", sets: 4 },
+                    { name: "Tricep Pushdown (Cable)", sets: 4 },
+                    { name: "Bicep Curl (Cable)", sets: 4 },
+                    { name: "Leg Press (Machine)", sets: 4 }
+                ]
+            },
+            {
+                name: "Core",
+                exercises: [
+                    { name: "Ab Wheel Rollout", sets: 4 },
+                    { name: "Plank", sets: 4 },
+                    { name: "Hanging Leg Raise", sets: 4 },
+                    { name: "Russian Twist", sets: 4 },
+                    { name: "Bicycle Crunch", sets: 4 }
+                ]
+            }
+        ];
+
+        // Laad bestaande data of gebruik de vaste database
+        let workouts = JSON.parse(localStorage.getItem('workouts')) || defaultWorkouts;
+        
+        // Zorg dat de default altijd opgeslagen staat als er niks was
+        if (!localStorage.getItem('workouts')) {
+            localStorage.setItem('workouts', JSON.stringify(workouts));
+        }
+
         let activeWorkout = null;
         let activeExerciseIndex = 0;
         let wakeLock = null;
 
-        // Wake Lock API tegen uitgaan scherm
         async function setWakeLock(enable) {
             if (!('wakeLock' in navigator)) return;
             try {
@@ -83,11 +135,6 @@
             const container = document.getElementById('workout-list');
             container.innerHTML = '';
             
-            if (workouts.length === 0) {
-                container.innerHTML = `<p class="text-gray-500 text-center py-8">Geen workouts gevonden. Maak er een aan.</p>`;
-                return;
-            }
-
             workouts.forEach((w, index) => {
                 const div = document.createElement('div');
                 div.className = "bg-gray-800 p-5 rounded-2xl border border-gray-700 flex justify-between items-center shadow-md";
