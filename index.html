@@ -1,169 +1,174 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Workout Tracker</title>
-    <!-- Tailwind CSS voor loeistrakke styling en contrast -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { background-color: #0f172a; color: #f8fafc; }
+        body { background-color: #111827; color: #F3F4F6; }
     </style>
 </head>
-<body class="flex flex-col min-h-screen justify-between p-4 font-sans">
+<body class="p-4 md:p-8 max-w-md mx-auto">
 
-    <!-- TOP BAR (Categorie & Voortgang - Extra Groot) -->
-    <div class="text-center pt-4">
-        <span id="category-display" class="text-2xl md:text-3xl font-black uppercase tracking-widest text-blue-400 block mb-1">
-            STARTEN...
-        </span>
-        <div id="progress-text" class="text-base font-bold text-slate-400 uppercase tracking-wider">0 / 0 Oefeningen</div>
-    </div>
-
-    <!-- MAIN TRACKING SCREEN (Gigantische leesbaarheid voor tijdens het trainen) -->
-    <div class="w-full max-w-3xl mx-auto my-auto text-center px-2">
-        <h1 id="exercise-title" class="text-5xl md:text-7xl font-black text-white leading-tight tracking-tight mb-6">
-            Klik op 'Start'
-        </h1>
-        <div id="weight-display" class="text-4xl md:text-6xl font-black text-emerald-400 mb-2">--</div>
-    </div>
-
-    <!-- CONTROLS (Enorme, huishoudfitte knoppen voor dikke vingers en zweet) -->
-    <div class="w-full max-w-2xl mx-auto space-y-4 pb-6">
-        
-        <!-- NAVIGATIE GRID -->
-        <div class="grid grid-cols-2 gap-4">
-            <!-- VORIGE KNOP -->
-            <button id="btn-prev" onclick="changeExercise(-1)" class="p-7 text-2xl font-black uppercase bg-slate-800 text-slate-300 rounded-2xl border-2 border-slate-700 active:bg-slate-700 transition-all disabled:opacity-20 disabled:pointer-events-none">
-                ⬅️ Vorige
+    <div id="app" class="space-y-6">
+        <div class="flex justify-between items-center">
+            <h1 class="text-3xl font-extrabold tracking-tight">Workouts</h1>
+            <button onclick="showCreateWorkoutModal()" class="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition">
+                <i class="fas fa-plus"></i>
             </button>
-            
-            <!-- SKIP / VOLGENDE KNOP -->
-            <button id="btn-next" onclick="changeExercise(1)" class="p-7 text-2xl font-black uppercase bg-blue-600 text-white rounded-2xl border-2 border-blue-500 active:bg-blue-700 transition-all">
-                START ➡️
+        </div>
+
+        <div id="workout-list" class="space-y-4"></div>
+    </div>
+
+    <div id="active-workout-screen" class="hidden fixed inset-0 bg-gray-900 p-6 flex flex-col justify-between z-50">
+        <div class="text-center space-y-4">
+            <h2 id="active-workout-title" class="text-3xl font-black text-white"></h2>
+            <div id="active-exercise-container" class="bg-gray-800 p-6 rounded-2xl border border-gray-700 space-y-4">
+                <h3 id="current-exercise-name" class="text-4xl font-extrabold text-blue-400"></h3>
+                <div class="flex justify-center gap-4 text-2xl font-bold">
+                    <span id="current-exercise-sets"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="prevExercise()" id="btn-active-prev" class="p-6 text-xl font-bold uppercase bg-gray-800 rounded-2xl border border-gray-700 disabled:opacity-30">
+                    ⬅️ Vorige
+                </button>
+                <button onclick="nextExercise()" id="btn-active-next" class="p-6 text-xl font-bold uppercase bg-blue-600 rounded-2xl">
+                    Skip ➡️
+                </button>
+            </div>
+            <button onclick="endWorkoutSession()" class="w-full p-4 bg-red-600 hover:bg-red-700 rounded-xl font-bold">
+                Stop Workout
             </button>
         </div>
     </div>
 
-    <!-- APP LOGICA (Harde Database, Navigatie & Wake Lock) -->
+    <div id="create-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="bg-gray-800 border border-gray-700 rounded-2xl w-full max-w-sm p-6 space-y-4">
+            <h3 class="text-xl font-bold">Nieuwe Workout</h3>
+            <input type="text" id="new-workout-name" placeholder="Bijv. Kettlebell Thuis" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-xl text-white">
+            <div class="flex gap-3">
+                <button onclick="hideCreateWorkoutModal()" class="flex-1 p-3 bg-gray-700 rounded-xl">Annuleer</button>
+                <button onclick="createWorkout()" class="flex-1 p-3 bg-blue-600 rounded-xl font-bold">Opslaan</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // 1. DE HARDE DATABASE (Exact jouw 3 categorieën, alle troep is weggesmeten)
-        const workoutDatabase = {
-            "Kettlebell": [
-                {"name": "Kettlebell Swing", "weight": "20 KG"},
-                {"name": "Kettlebell Goblet Squat", "weight": "20 KG"},
-                {"name": "Kettlebell Turkish Get-Up", "weight": "20 KG"},
-                {"name": "Kettlebell Snatch", "weight": "20 KG"},
-                {"name": "Kettlebell Clean & Press", "weight": "20 KG"},
-                {"name": "Kettlebell Thruster", "weight": "20 KG"},
-                {"name": "Kettlebell Windmill", "weight": "20 KG"},
-                {"name": "Kettlebell TV Bicep Curl", "weight": "20 KG"},
-                {"name": "Kettlebell TV Tricep Extension", "weight": "20 KG"}
-            ],
-            "One Gym": [
-                {"name": "Lat Pulldown (Cable)", "weight": "Kabel"},
-                {"name": "Seated Row (Machine)", "weight": "Machine"},
-                {"name": "Incline Bench Press (Smith)", "weight": "Smith Machine"},
-                {"name": "Chest Press (Machine)", "weight": "Machine"},
-                {"name": "Iso-Lateral Row (Machine)", "weight": "Machine"},
-                {"name": "Tricep Pushdown (Cable)", "weight": "Kabel"},
-                {"name": "Bicep Curl (Cable)", "weight": "Kabel"},
-                {"name": "Leg Press (Machine)", "weight": "Machine"}
-            ],
-            "Core": [
-                {"name": "Ab Wheel Rollout", "weight": "Reps"},
-                {"name": "Plank", "weight": "Tijd / Lichaamsgewicht"},
-                {"name": "Hanging Leg Raise", "weight": "Reps"},
-                {"name": "Russian Twist", "weight": "Reps"},
-                {"name": "Bicycle Crunch", "weight": "Reps"}
-            ]
-        };
-
-        // Maak één platte lijst van alle oefeningen voor de actieve sessie
-        let exercises = [];
-        Object.keys(workoutDatabase).forEach(category => {
-            workoutDatabase[category].forEach(ex => {
-                exercises.push({ ...ex, category: category });
-            });
-        });
-
-        let currentIndex = -1; // Begint vóór de start
+        let workouts = JSON.parse(localStorage.getItem('workouts')) || [];
+        let activeWorkout = null;
+        let activeExerciseIndex = 0;
         let wakeLock = null;
 
-        // 2. WAKE LOCK: Voorkom dat het scherm uitgaat (Geforceerd aanhouden)
-        async function acquireWakeLock() {
+        // Wake Lock API tegen uitgaan scherm
+        async function setWakeLock(enable) {
+            if (!('wakeLock' in navigator)) return;
             try {
-                if ('wakeLock' in navigator) {
+                if (enable) {
                     wakeLock = await navigator.wakeLock.request('screen');
-                    console.log("Wake Lock actief: Scherm blijft aan.");
-                }
-            } catch (err) {
-                console.log(`Wake Lock mislukt: ${err.message}`);
-            }
-        }
-
-        // Automatisch heractiveren als je terugkeert naar de app (visibility check)
-        document.addEventListener('visibilitychange', async () => {
-            if (document.visibilityState === 'visible' && currentIndex >= 0) {
-                await acquireWakeLock();
-            }
-        });
-
-        // 3. UPDATE INTERFACE (Mega letters & Contrast)
-        function updateUI() {
-            if (currentIndex < 0) {
-                document.getElementById('category-display').innerText = "KLAAR VOOR DE START";
-                document.getElementById('exercise-title').innerText = "Start je Workout";
-                document.getElementById('weight-display').innerText = "20 KG & GYM READY";
-                document.getElementById('btn-prev').disabled = true;
-                document.getElementById('btn-next').innerText = "START ➡️";
-                return;
-            }
-
-            const current = exercises[currentIndex];
-            
-            // Pas tekst aan met keihard contrast
-            document.getElementById('category-display').innerText = current.category;
-            document.getElementById('exercise-title').innerText = current.name;
-            document.getElementById('weight-display').innerText = current.weight;
-            document.getElementById('progress-text').innerText = `${currentIndex + 1} / ${exercises.length} Oefeningen`;
-            
-            // Knoppen-beheer (Skip / Vorige)
-            document.getElementById('btn-prev').disabled = (currentIndex === 0);
-            document.getElementById('btn-next').innerText = (currentIndex === exercises.length - 1) ? "KLAAR 🎉" : "SKIP ➡️";
-        }
-
-        // 4. NAVIGATIE LOGICA (Skip & Vorige)
-        async function changeExercise(direction) {
-            // Activeer Wake Lock bij de eerste klik op Start
-            if (currentIndex === -1) {
-                await acquireWakeLock();
-            }
-
-            currentIndex += direction;
-            
-            // Einde van de workout bereikt
-            if (currentIndex >= exercises.length) {
-                document.getElementById('category-display').innerText = "FINISH";
-                document.getElementById('exercise-title').innerText = "Workout Voltooid! 🦾";
-                document.getElementById('weight-display').innerText = "Lekker gewerkt, Richard!";
-                document.getElementById('progress-text').innerText = "Alles Afgevinkt";
-                document.getElementById('btn-next').disabled = true;
-                document.getElementById('btn-prev').disabled = true;
-                
-                if (wakeLock) {
+                } else if (wakeLock) {
                     await wakeLock.release();
                     wakeLock = null;
                 }
-                return;
-            }
-            
-            if (currentIndex < 0) currentIndex = -1;
-            updateUI();
+            } catch (err) { console.log(err); }
         }
 
-        // Eerste render bij laden van de pagina
-        window.onload = updateUI;
+        function renderWorkouts() {
+            const container = document.getElementById('workout-list');
+            container.innerHTML = '';
+            
+            if (workouts.length === 0) {
+                container.innerHTML = `<p class="text-gray-500 text-center py-8">Geen workouts gevonden. Maak er een aan.</p>`;
+                return;
+            }
+
+            workouts.forEach((w, index) => {
+                const div = document.createElement('div');
+                div.className = "bg-gray-800 p-5 rounded-2xl border border-gray-700 flex justify-between items-center shadow-md";
+                div.innerHTML = `
+                    <div>
+                        <h2 class="text-xl font-bold text-white">${w.name}</h2>
+                        <p class="text-sm text-gray-400">${w.exercises ? w.exercises.length : 0} oefeningen</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="manageExercises(${index})" class="bg-gray-700 p-3 rounded-xl text-gray-300"><i class="fas fa-list"></i></button>
+                        <button onclick="startWorkoutSession(${index})" class="bg-emerald-600 p-3 rounded-xl text-white font-bold"><i class="fas fa-play"></i></button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function showCreateWorkoutModal() { document.getElementById('create-modal').classList.remove('hidden'); }
+        function hideCreateWorkoutModal() { document.getElementById('create-modal').classList.add('hidden'); }
+
+        function createWorkout() {
+            const name = document.getElementById('new-workout-name').value.trim();
+            if (!name) return;
+            workouts.push({ name: name, exercises: [] });
+            localStorage.setItem('workouts', JSON.stringify(workouts));
+            document.getElementById('new-workout-name').value = '';
+            hideCreateWorkoutModal();
+            renderWorkouts();
+        }
+
+        function manageExercises(index) {
+            const name = prompt("Voeg een oefening toe aan " + workouts[index].name + ":");
+            if (!name) return;
+            if (!workouts[index].exercises) workouts[index].exercises = [];
+            workouts[index].exercises.push({ name: name, sets: 4 });
+            localStorage.setItem('workouts', JSON.stringify(workouts));
+            renderWorkouts();
+        }
+
+        function startWorkoutSession(index) {
+            activeWorkout = workouts[index];
+            if (!activeWorkout.exercises || activeWorkout.exercises.length === 0) {
+                alert("Deze workout heeft nog geen oefeningen!");
+                return;
+            }
+            activeExerciseIndex = 0;
+            setWakeLock(true);
+            
+            document.getElementById('active-workout-screen').classList.remove('hidden');
+            document.getElementById('active-workout-title').innerText = activeWorkout.name;
+            updateActiveExerciseUI();
+        }
+
+        function updateActiveExerciseUI() {
+            const ex = activeWorkout.exercises[activeExerciseIndex];
+            document.getElementById('current-exercise-name').innerText = ex.name;
+            document.getElementById('current-exercise-sets').innerText = `${ex.sets || 4} Sets`;
+            document.getElementById('btn-active-prev').disabled = (activeExerciseIndex === 0);
+            document.getElementById('btn-active-next').innerText = (activeExerciseIndex === activeWorkout.exercises.length - 1) ? "Klaar" : "Skip ➡️";
+        }
+
+        function changeExercise(dir) {
+            activeExerciseIndex += dir;
+            if (activeExerciseIndex >= activeWorkout.exercises.length) {
+                endWorkoutSession();
+                return;
+            }
+            if (activeExerciseIndex < 0) activeExerciseIndex = 0;
+            updateActiveExerciseUI();
+        }
+
+        function nextExercise() { changeExercise(1); }
+        function prevExercise() { changeExercise(-1); }
+
+        function endWorkoutSession() {
+            setWakeLock(false);
+            document.getElementById('active-workout-screen').classList.add('hidden');
+            activeWorkout = null;
+        }
+
+        window.onload = renderWorkouts;
     </script>
 </body>
 </html>
