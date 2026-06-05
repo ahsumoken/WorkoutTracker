@@ -402,58 +402,26 @@ body { min-height: 100dvh; overflow-x: hidden; }
   color: var(--text); line-height: 1; letter-spacing: -.02em;
   position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
 }
-.timer-meta { text-align: center; width: 100%; }
+.timer-meta { text-align: center; }
 .timer-set, .timer-round {
   font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 600;
   color: var(--text-2); letter-spacing: .06em;
 }
 .timer-exercise {
-  font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 900;
-  color: #ffffff; margin-top: 6px; text-transform: uppercase; tracking-tight; line-height: 1.2;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 800;
+  color: var(--text); margin-top: 4px;
 }
-.timer-controls { display: flex; gap: 12px; align-items: center; width: 100%; justify-content: center; }
+.timer-controls { display: flex; gap: 12px; align-items: center; }
 .btn-timer {
   background: var(--bg-3); border: 1px solid var(--border);
   border-radius: var(--radius); color: var(--text); cursor: pointer;
-  padding: 14px 24px; display: flex; align-items: center; gap: 6px;
-  font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 800;
+  padding: 12px 20px; display: flex; align-items: center; gap: 6px;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 700;
   letter-spacing: .08em; transition: background .15s;
 }
 .btn-timer svg { width: 18px; height: 18px; }
 .btn-timer:active { background: var(--bg-4); }
 .btn-timer-stop { color: var(--accent-red); border-color: rgba(239,68,68,0.3); }
-
-/* Grote Navigatie Knoppen voor de Timer */
-.timer-nav-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  width: 100%;
-  margin-top: 4px;
-}
-.btn-timer-nav {
-  padding: 18px;
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 18px;
-  font-weight: 900;
-  text-transform: uppercase;
-  border-radius: var(--radius);
-  cursor: pointer;
-  transition: all .15s;
-  border: 1px solid var(--border-bright);
-}
-.btn-timer-nav-prev {
-  background: var(--bg-3);
-  color: var(--text-2);
-}
-.btn-timer-nav-next {
-  background: var(--accent-blue);
-  color: #ffffff;
-}
-.btn-timer-nav:disabled {
-  opacity: 0.2;
-  pointer-events: none;
-}
 
 /* ─── REST BANNER ─── */
 .rest-banner {
@@ -583,9 +551,9 @@ body { min-height: 100dvh; overflow-x: hidden; }
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 input[type="number"] { -moz-appearance: textfield; }
-:::webkit-scrollbar { width: 4px; }
-:::webkit-scrollbar-track { background: transparent; }
-:::webkit-scrollbar-thumb { background: var(--bg-4); border-radius: 2px; }
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--bg-4); border-radius: 2px; }
 
 /* ─── TOAST ─── */
 .toast {
@@ -759,12 +727,6 @@ input[type="number"] { -moz-appearance: textfield; }
           <div class="timer-round" id="timer-round-info">Ronde 1 / 3</div>
           <div class="timer-exercise" id="timer-exercise-name"></div>
         </div>
-        
-        <div class="timer-nav-grid">
-          <button id="btn-timer-prev" class="btn-timer-nav btn-timer-nav-prev">⬅️ Vorige</button>
-          <button id="btn-timer-next" class="btn-timer-nav btn-timer-nav-next">Skip ➡️</button>
-        </div>
-
         <div class="timer-controls">
           <button id="btn-timer-pause" class="btn-timer">
             <svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
@@ -995,14 +957,18 @@ const Timer = (() => {
 
   async function grabWakeLock() {
     if (!('wakeLock' in navigator)) return;
+    if (document.visibilityState !== 'visible') return;
     wakeLockEnabled = true;
     try {
-      if (!wl) {
-        wl = await navigator.wakeLock.request('screen');
-        console.log("🔒 Scherm lock geclaimd. Scherm blijft aan.");
-      }
+      wl = await navigator.wakeLock.request('screen');
+      wl.addEventListener('release', () => {
+        wl = null;
+        if (wakeLockEnabled && document.visibilityState === 'visible') {
+          setTimeout(grabWakeLock, 500);
+        }
+      });
     } catch(e) {
-      console.log("WakeLock aanvraag geweigerd of mislukt.");
+      if (wakeLockEnabled) setTimeout(grabWakeLock, 30000);
     }
   }
 
@@ -1011,9 +977,12 @@ const Timer = (() => {
     if (wl) { try { await wl.release(); } catch(e) {} wl = null; }
   }
 
-  document.addEventListener('visibilitychange', async () => {
+  document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible' && wakeLockEnabled) {
-      await grabWakeLock();
+      if (wl) { try { wl.release(); } catch(e) {} wl = null; }
+      grabWakeLock();
+    } else if (document.visibilityState === 'hidden') {
+      wl = null;
     }
   });
 
@@ -1073,10 +1042,7 @@ const Timer = (() => {
     el('timer-set-info').textContent   = `Set ${currentSet} / ${totalSets}`;
     el('timer-round-info').textContent = `Ronde ${currentRound} / ${totalRounds}`;
     const exIdx = (currentSet - 1) % exNames.length;
-    el('timer-exercise-name').textContent = phase === 'roundRest' ? '— RUSTPAUZE —' : (exNames[exIdx] || '');
-    
-    // Status van de handmatige navigatieknoppen updaten
-    el('btn-timer-prev').disabled = (currentSet === 1 && phase === 'work');
+    el('timer-exercise-name').textContent = phase === 'roundRest' ? '— rust —' : (exNames[exIdx] || '');
   }
 
   function next() {
@@ -1091,29 +1057,6 @@ const Timer = (() => {
       else { st.phase = 'rest'; st.seconds = st.restSec; beep('rest'); }
     } else {
       st.currentSet++; st.phase = 'work'; st.seconds = st.workSec; beep('work');
-    }
-    draw();
-  }
-
-  function prev() {
-    if (!st) return;
-    const perRound = st.totalSets / st.totalRounds;
-
-    if (st.phase === 'rest' || st.phase === 'roundRest') {
-      // Als je in de rust zit, ga je terug naar de werkfase van de HUIDIGE set
-      st.phase = 'work';
-      st.seconds = st.workSec;
-      if (st.phase === 'roundRest') st.currentRound--;
-    } else {
-      // Als je in de werkfase zit, zak je één set terug
-      if (st.currentSet > 1) {
-        st.currentSet--;
-        // Bepaal of de vorige set een ronde-wissel veroorzaakte
-        const wasLastInRound = st.currentSet % perRound === 0;
-        st.phase = wasLastInRound ? 'roundRest' : 'rest';
-        st.seconds = wasLastInRound ? st.roundRestSec : st.restSec;
-        if (wasLastInRound) st.currentRound--;
-      }
     }
     draw();
   }
@@ -1150,11 +1093,9 @@ const Timer = (() => {
   document.addEventListener('DOMContentLoaded', () => {
     el('btn-timer-pause').addEventListener('click', pause);
     el('btn-timer-stop').addEventListener('click', stop);
-    el('btn-timer-next').addEventListener('click', () => next());
-    el('btn-timer-prev').addEventListener('click', () => prev());
   });
 
-  return { start, stop, pause, releaseWakeLock: dropWakeLock, grabWakeLock };
+  return { start, stop, pause, releaseWakeLock: dropWakeLock };
 })();
 
 // ─── REST BANNER ───────────────────────────────────────────────────────────
@@ -1469,7 +1410,7 @@ const Session = (() => {
 
     const title = document.createElement('div');
     title.className = 'section-title';
-    title.style.setMarginBottom = '10px';
+    title.style.marginBottom = '10px';
     title.textContent = 'KIES EEN SNACK';
     container.appendChild(title);
 
@@ -1729,7 +1670,7 @@ const Session = (() => {
 
   function isActive() {
     if (currentType) return true;
-    return ! sessionStorage.getItem(STORAGE_KEY);
+    return sessionStorage.getItem(STORAGE_KEY) !== null;
   }
   function activeType() {
     if (currentType) return currentType;
