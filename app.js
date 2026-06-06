@@ -14,17 +14,21 @@ function showToast(msg) {
   setTimeout(() => t.remove(), 2100);
 }
 
-// AUTOMATISCHE INTERFACE FIX: Injecteert de nodige styles voor het donkere thema & witte titels
-(function injectStyles() {
+// ─── AUTOMATISCHE INTERFACE FIX (TITELS & STYLING SKIP-KNOP) ────────────────
+
+(function injectInterfaceStyles() {
   const style = document.createElement('style');
   style.textContent = `
-    #screen-session, #screen-session h3, #screen-session div, .workout-title, [id*="exercise"] {
-      color: #ffffff !important;
+    #screen-session, 
+    #screen-session h3, 
+    #screen-session div, 
+    .workout-title, 
+    [id*="exercise"], 
+    .session-exercise-title,
+    .timer-container div { 
+      color: #ffffff !important; 
     }
-    #screen-session h3, .workout-title {
-      font-weight: 800 !important;
-      font-size: 24px !important;
-    }
+    
     .btn-control-skip {
       background: #1e293b;
       border: 1px solid #334155;
@@ -37,7 +41,7 @@ function showToast(msg) {
       align-items: center;
       justify-content: center;
       transition: background 0.1s ease;
-      margin: 0 5px;
+      margin: 0 10px;
     }
     .btn-control-skip:active {
       background: #475569;
@@ -54,7 +58,7 @@ const App = (() => {
     refreshHome();
     bindHome();
     bindSession();
-    injectSkipButtonHTML(); // Bouwt de fysieke skipknop in het scherm
+    startInterfaceWatcher();
     bindHistory();
     bindExportModal();
     registerSW();
@@ -106,32 +110,34 @@ const App = (() => {
     });
   }
 
-  function injectSkipButtonHTML() {
-    // Zoekt naar de stopknop om de skipknop er direct voor te plaatsen in de DOM
-    const stopBtn = document.getElementById('btn-stop');
-    if (stopBtn && !document.getElementById('btn-skip')) {
-      const skipBtn = document.createElement('button');
-      skipBtn.id = 'btn-skip';
-      skipBtn.className = 'btn-control-skip';
-      skipBtn.title = 'Sla oefening over';
-      skipBtn.innerHTML = `
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <polygon points="5 4 15 12 5 20 5 4" fill="currentColor"></polygon>
-          <line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="3"></line>
-        </svg>`;
-      stopBtn.parentNode.insertBefore(skipBtn, stopBtn);
-      
-      // Bind direct de klik-functionaliteit
-      skipBtn.addEventListener('click', () => {
-        if (typeof Timer !== 'undefined') {
-          if (Timer.stop) Timer.stop(); 
-          if (typeof nextStep === 'function') nextStep();
-          else if (typeof handleNext === 'function') handleNext();
-          else if (Timer.next) Timer.next();
-          showToast('Oefening overgeslagen ➔');
-        }
-      });
-    }
+  function startInterfaceWatcher() {
+    const observer = new MutationObserver(() => {
+      const stopBtn = document.getElementById('btn-stop');
+      if (stopBtn && !document.getElementById('btn-skip')) {
+        const skipBtn = document.createElement('button');
+        skipBtn.id = 'btn-skip';
+        skipBtn.className = 'btn-control-skip';
+        skipBtn.title = 'Sla deze set over';
+        skipBtn.innerHTML = `
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="5 4 15 12 5 20 5 4" fill="currentColor"></polygon>
+            <line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="3"></line>
+          </svg>`;
+        stopBtn.parentNode.insertBefore(skipBtn, stopBtn);
+        
+        skipBtn.addEventListener('click', () => {
+          if (typeof Timer !== 'undefined') {
+            if (Timer.stop) Timer.stop(); 
+            if (typeof nextStep === 'function') nextStep();
+            else if (typeof handleNext === 'function') handleNext();
+            else if (Timer.next) Timer.next();
+            showToast('Oefening overgeslagen ➔');
+          }
+        });
+      }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
   }
 
   function bindSession() {
