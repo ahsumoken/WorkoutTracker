@@ -163,33 +163,14 @@ const Timer = (() => {
   return { start, stop, pause, skip, releaseWakeLock: dropWakeLock };
 })();
 
-// ─── REST BANNER ───────────────────────────────────────────────────────────
-
 const RestBanner = (() => {
   let iv = null;
-
   function show(seconds, onDone) {
-    clearInterval(iv);
-    let rem = seconds;
-    const banner = document.getElementById('rest-banner');
-    const timeEl = document.getElementById('rest-time-display');
-    const barEl  = document.getElementById('rest-bar');
-    banner.style.display='block';
-    timeEl.textContent = rem;
-    barEl.style.width = '100%';
-    iv = setInterval(() => {
-      rem--;
-      timeEl.textContent = rem;
-      barEl.style.width = `${(rem / seconds) * 100}%`;
-      if (rem <= 0) { hide(); if (onDone) onDone(); }
-    }, 1000);
+    clearInterval(iv); let rem = seconds; const banner = document.getElementById('rest-banner'); const timeEl = document.getElementById('rest-time-display'); const barEl = document.getElementById('rest-bar');
+    banner.style.display='block'; timeEl.textContent = rem; barEl.style.width = '100%';
+    iv = setInterval(() => { rem--; timeEl.textContent = rem; barEl.style.width = `${(rem / seconds) * 100}%`; if (rem <= 0) { hide(); if (onDone) onDone(); } }, 1000);
     document.getElementById('btn-skip-rest').onclick = () => { hide(); if (onDone) onDone(); };
   }
-
-  function hide() {
-    clearInterval(iv); iv = null;
-    document.getElementById('rest-banner').style.display='none';
-  }
-
+  function hide() { clearInterval(iv); iv = null; document.getElementById('rest-banner').style.display='none'; }
   return { show, hide };
 })();
