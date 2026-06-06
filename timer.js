@@ -4,10 +4,18 @@ const Timer = (() => {
   let wakeLockEnabled = false;
   let st = null;
   let exNames = [];
+  let audioCtx = null;
   const CIRC = 2 * Math.PI * 88;
 
-  function el(id) {
-    return document.getElementById(id);
+  function el(id) { return document.getElementById(id); }
+
+  function initAudio() {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
   }
 
   async function grabWakeLock() {
@@ -29,10 +37,7 @@ const Timer = (() => {
 
   async function dropWakeLock() {
     wakeLockEnabled = false;
-    if (wl) {
-      try { await wl.release(); } catch (e) {}
-      wl = null;
-    }
+    if (wl) { try { await wl.release(); } catch (e) {} wl = null; }
   }
 
   document.addEventListener('visibilitychange', () => {
@@ -45,37 +50,33 @@ const Timer = (() => {
   });
 
   function beep(type) {
+    if (!audioCtx) return;
     try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
       osc.connect(gain);
-      gain.connect(ctx.destination);
+      gain.connect(audioCtx.destination);
       osc.type = 'sine';
 
       if (type === 'work') {
         osc.frequency.value = 880;
-        gain.gain.setValueAtTime(0.4, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.25);
+        gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.25);
       } else if (type === 'rest') {
         osc.frequency.value = 440;
-        gain.gain.setValueAtTime(0.3, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.4);
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.4);
       } else {
         [0, 0.2, 0.4].forEach(t => {
-          const o = ctx.createOscillator();
-          const g = ctx.createGain();
-          o.connect(g);
-          g.connect(ctx.destination);
+          const o = audioCtx.createOscillator();
+          const g = audioCtx.createGain();
+          o.connect(g); g.connect(audioCtx.destination);
           o.frequency.value = 1100;
-          g.gain.setValueAtTime(0.4, ctx.currentTime + t);
-          g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.15);
-          o.start(ctx.currentTime + t);
-          o.stop(ctx.currentTime + t + 0.15);
+          g.gain.setValueAtTime(0.4, audioCtx.currentTime + t);
+          g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + t + 0.15);
+          o.start(audioCtx.currentTime + t); o.stop(audioCtx.currentTime + t + 0.15);
         });
       }
     } catch (e) {}
@@ -97,7 +98,7 @@ const Timer = (() => {
       phaseEl.textContent = 'WERK';
       phaseEl.className = 'timer-phase';
       fg.className = 'timer-ring-fg';
-      duration = workSec;
+      duration = workSec || 1;
     } else if (phase === 'rest') {
       phaseEl.textContent = 'RUST';
       phaseEl.className = 'timer-phase rest-phase';
@@ -111,7 +112,6 @@ const Timer = (() => {
     }
 
     fg.style.strokeDashoffset = CIRC * (1 - seconds / duration);
-
     el('timer-set-info').textContent = `Set ${currentSet} / ${totalSets}`;
     el('timer-round-info').textContent = `Ronde ${currentRound} / ${totalRounds}`;
     const exIdx = (currentSet - 1) % exNames.length;
@@ -126,137 +126,76 @@ const Timer = (() => {
 
     if (st.phase === 'work') {
       if (isLast) {
-        beep('done');
-        stop();
+        beep('done'); stop();
         if (st.onComplete) st.onComplete();
         return;
       } else if (isLastSetInRound) {
-        st.currentRound++;
-        st.phase = 'roundRest';
-        st.seconds = st.roundRestSec;
-        beep('rest');
+        st.currentRound++; st.phase = 'roundRest'; st.seconds = st.roundRestSec; beep('rest');
       } else {
-        st.phase = 'rest';
-        st.seconds = st.restSec;
-        beep('rest');
+        st.phase = 'rest'; st.seconds = st.restSec; beep('rest');
       }
     } else {
-      st.currentSet++;
-      st.phase = 'work';
-      st.seconds = st.workSec;
-      beep('work');
+      st.currentSet++; st.phase = 'work'; st.seconds = st.workSec; beep('work');
     }
     draw();
   }
 
-  function skip() {
-    if (!st) return;
-    next();
+  function start({ totalSets, totalRounds, workSec, restSec, roundRestSec, exercises, onComplete }) {
+    initAudio();
+    exNames = exercises || [];
+    st = { totalSets, totalRounds, workSec, restSec, roundRestSec, phase: 'work', currentSet: 1, currentRound: 1, seconds: workSec || 1, paused: false, onComplete };
+    grabWakeLock();
+    el('modal-timer').style.display = 'flex';
+    draw(); beep('work');
+    if (workSec > 0) { iv = setInterval(tick, 1000); }
   }
 
   function tick() {
     if (!st) return;
     st.seconds--;
-    if (st.seconds <= 0) {
-      next();
-    } else {
-      draw();
-    }
-  }
-
-  function start({ totalSets, totalRounds, workSec, restSec, roundRestSec, exercises, onComplete }) {
-    exNames = exercises || [];
-    st = {
-      totalSets,
-      totalRounds,
-      workSec,
-      restSec,
-      roundRestSec,
-      phase: 'work',
-      currentSet: 1,
-      currentRound: 1,
-      seconds: workSec || 1,
-      paused: false,
-      onComplete
-    };
-    grabWakeLock();
-    el('modal-timer').style.display = 'flex';
-    draw();
-    beep('work');
-    if (workSec > 0) {
-      iv = setInterval(tick, 1000);
-    } else {
-      el('timer-display').textContent = 'GO!';
-    }
+    if (st.seconds <= 0) { next(); } else { draw(); }
   }
 
   function pause() {
     if (!st || st.workSec === 0) return;
     if (st.paused) {
-      st.paused = false;
-      iv = setInterval(tick, 1000);
+      st.paused = false; iv = setInterval(tick, 1000);
       el('btn-timer-pause').innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
     } else {
-      st.paused = true;
-      clearInterval(iv);
-      iv = null;
+      st.paused = true; clearInterval(iv); iv = null;
       el('btn-timer-pause').innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
     }
   }
 
   function stop() {
-    clearInterval(iv);
-    iv = null;
-    st = null;
-    exNames = [];
-    dropWakeLock();
-    el('modal-timer').style.display = 'none';
+    clearInterval(iv); iv = null; st = null; exNames = [];
+    dropWakeLock(); el('modal-timer').style.display = 'none';
   }
 
   document.addEventListener('DOMContentLoaded', () => {
     el('btn-timer-pause').addEventListener('click', pause);
-    el('btn-timer-skip').addEventListener('click', skip);
+    el('btn-timer-skip').addEventListener('click', () => { if (st) next(); });
     el('btn-timer-stop').addEventListener('click', stop);
   });
 
-  return { start, stop, pause, skip, releaseWakeLock: dropWakeLock };
+  return { start, stop, pause };
 })();
 
 const RestBanner = (() => {
   let iv = null;
-
   function show(seconds, onDone) {
     clearInterval(iv);
     let rem = seconds;
     const banner = document.getElementById('rest-banner');
     const timeEl = document.getElementById('rest-time-display');
     const barEl = document.getElementById('rest-bar');
-    
-    banner.style.display = 'block';
-    timeEl.textContent = rem;
-    barEl.style.width = '100%';
-
+    banner.style.display = 'block'; timeEl.textContent = rem; barEl.style.width = '100%';
     iv = setInterval(() => {
-      rem--;
-      timeEl.textContent = rem;
-      barEl.style.width = `${(rem / seconds) * 100}%`;
-      if (rem <= 0) {
-        hide();
-        if (onDone) onDone();
-      }
+      rem--; timeEl.textContent = rem; barEl.style.width = `${(rem / seconds) * 100}%`;
+      if (rem <= 0) { hide(); if (onDone) onDone(); }
     }, 1000);
-
-    document.getElementById('btn-skip-rest').onclick = () => {
-      hide();
-      if (onDone) onDone();
-    };
+    document.getElementById('btn-skip-rest').onclick = () => { hide(); if (onDone) onDone(); };
   }
-
-  function hide() {
-    clearInterval(iv);
-    iv = null;
-    document.getElementById('rest-banner').style.display = 'none';
-  }
-
+  function hide() { clearInterval(iv); iv = null; document.getElementById('rest-banner').style.display = 'none'; }
   return { show, hide };
 })();
