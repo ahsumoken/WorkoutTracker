@@ -81,6 +81,23 @@ const App = (() => {
       }
     });
     document.getElementById('btn-finish').addEventListener('click', () => Session.finish());
+
+    // SKIP LINK/KNOP LOGICA: Schakelt direct door binnen de actieve Timer module
+    document.getElementById('btn-skip')?.addEventListener('click', () => {
+      if (typeof Timer !== 'undefined') {
+        if (Timer.stop) Timer.stop(); 
+        
+        // Forceert de overgang naar de volgende set of rustfase
+        if (typeof nextStep === 'function') {
+          nextStep();
+        } else if (typeof handleNext === 'function') {
+          handleNext();
+        } else if (Timer.next) {
+          Timer.next();
+        }
+        showToast('Oefening overgeslagen ➔');
+      }
+    });
   }
 
   function bindHistory() {
