@@ -12,7 +12,7 @@ const SESSION_TYPES = {
       { id: 'bench',     name: 'Bench Press',      sets: 4, reps: '8-10'  },
       { id: 'bbrow',     name: 'Barbell Row',      sets: 4, reps: '8-10'  },
       { id: 'ohp',       name: 'OHP',              sets: 3, reps: '10-12' },
-      { id: 'plank',     name: 'Plank',            sets: 3, reps: '45sec' },
+      { id: 'plank',     name: 'Plank',            sets: 3, reps: '45sec' }
     ]
   },
   'compounds-b': {
@@ -27,7 +27,7 @@ const SESSION_TYPES = {
       { id: 'dbshoulder', name: 'DB Shoulder Press',       sets: 3, reps: '12-15' },
       { id: 'latraise',   name: 'Lateral Raise',            sets: 3, reps: '15'    },
       { id: 'cablerow',   name: 'Cable Row',                sets: 3, reps: '12-15' },
-      { id: 'abwheel',    name: 'Ab Wheel',                 sets: 3, reps: '12-15' },
+      { id: 'abwheel',    name: 'Ab Wheel',                 sets: 3, reps: '12-15' }
     ]
   },
   'kettlebell': {
@@ -45,11 +45,11 @@ const SESSION_TYPES = {
       { id: 'cp',       name: 'Clean & Press',     defaultWeight: '2×16kg'      },
       { id: 'burpees',  name: 'Burpees',           defaultWeight: 'eigen gew.'  },
       { id: 'kbrdl',    name: 'Romanian Deadlift', defaultWeight: '2×20kg'      },
-      { id: 'renrow',   name: 'Renegade Row',      defaultWeight: '2×16kg'      },
+      { id: 'renrow',   name: 'Renegade Row',      defaultWeight: '2×16kg'      }
     ],
     finisher: [
-      { id: 'fin_pull', name: 'Negatieve Pull-ups', sets: 3, reps: 10 },
-      { id: 'fin_dips', name: 'Bench Dips',         sets: 3, reps: 10 }
+      { name: '3×10 Negatieve Pull-ups' },
+      { name: '3×10 Bench Dips'         }
     ]
   },
   'kettlebell-b': {
@@ -69,7 +69,7 @@ const SESSION_TYPES = {
       { id: 'slrdl_l',    name: 'Single Leg RDL (L)',    defaultWeight: '1×20kg'      },
       { id: 'slrdl_r',    name: 'Single Leg RDL (R)',    defaultWeight: '1×20kg'      },
       { id: 'sarow_l',    name: 'Single Arm Row (L)',    defaultWeight: '1×20kg'      },
-      { id: 'sarow_r',    name: 'Single Arm Row (R)',    defaultWeight: '1×20kg'      },
+      { id: 'sarow_r',    name: 'Single Arm Row (R)',    defaultWeight: '1×20kg'      }
     ],
     finisher: null
   },
@@ -88,7 +88,7 @@ const SESSION_TYPES = {
       { id: 'aagoblet',   name: 'Goblet Squat',        defaultWeight: '20kg'       },
       { id: 'pushup',     name: 'Push-up normaal',     defaultWeight: 'eigen gew.' },
       { id: 'negpull',    name: 'Negatieve Pull-up',   defaultWeight: 'eigen gew.' },
-      { id: 'aaburpees',  name: 'Burpees',             defaultWeight: 'eigen gew.' },
+      { id: 'aaburpees',  name: 'Burpees',             defaultWeight: 'eigen gew.' }
     ],
     finisher: null
   },
@@ -107,7 +107,7 @@ const SESSION_TYPES = {
       { id: 'ringrow',    name: 'Ring Row / TRX Row',     defaultWeight: 'eigen gew.' },
       { id: 'elevpush',   name: 'Push-up voeten op bank', defaultWeight: 'eigen gew.' },
       { id: 'splitsq',    name: 'Split Squat',            defaultWeight: '2×16kg'     },
-      { id: 'mtclimb',    name: 'Mountain Climbers',      defaultWeight: 'eigen gew.' },
+      { id: 'mtclimb',    name: 'Mountain Climbers',      defaultWeight: 'eigen gew.' }
     ],
     finisher: null
   },
