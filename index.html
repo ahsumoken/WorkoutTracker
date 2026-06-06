@@ -6,7 +6,6 @@
   <meta name="theme-color" content="#0a0a0f">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="TrainLog">
   <title>TrainLog</title>
   <link rel="manifest" href="manifest.json">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/nosleep.js/0.12.0/NoSleep.min.js"></script>
@@ -42,87 +41,98 @@
       <div class="session-grid">
         <div id="active-session-banner" style="display:none;grid-column:1/-1;background:rgba(249,115,22,0.12);border:1.5px solid rgba(249,115,22,0.4);border-radius:var(--radius);padding:14px 16px;align-items:center;justify-content:space-between;gap:12px;">
           <div>
-            <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.08em;color:var(--accent-orange);">● SESSIE ACTIEF</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;color:var(--accent-orange);">● SESSIE ACTIEF</div>
             <div id="active-session-name" style="font-size:15px;font-weight:600;margin-top:2px;"></div>
           </div>
           <div style="display:flex;gap:8px;">
-            <button id="btn-resume-session" style="background:var(--accent-orange);color:#fff;border:none;border-radius:var(--radius-sm);padding:8px 16px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;letter-spacing:.06em;cursor:pointer;">HERVAT</button>
-            <button id="btn-discard-session" style="background:var(--bg-3);color:var(--text-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;cursor:pointer;">✕</button>
+            <button id="btn-resume-session">HERVAT</button>
+            <button id="btn-discard-session">✕</button>
           </div>
         </div>
         <div class="section-label">KIES SESSIE</div>
+        
         <button class="session-card" data-type="compounds-a">
-          <div class="session-card-accent" style="background:#3b82f6"></div>
+          <div class="session-card-accent" style="background:var(--accent-blue);"></div>
           <div class="session-tag">GYM A</div>
           <div class="session-name">Compounds A</div>
           <div class="session-sub">Squat · Deadlift · Bench · Row · OHP</div>
           <div class="session-sets">6 oefeningen · ~60 min</div>
         </button>
+
         <button class="session-card" data-type="compounds-b">
-          <div class="session-card-accent" style="background:#06b6d4"></div>
+          <div class="session-card-accent" style="background:var(--accent-cyan);"></div>
           <div class="session-tag">GYM B</div>
           <div class="session-name">Compounds B</div>
           <div class="session-sub">RDL · Incline · Pull-up · Press</div>
           <div class="session-sets">7 oefeningen · ~65 min</div>
         </button>
+
         <button class="session-card" data-type="kettlebell">
-          <div class="session-card-accent" style="background:#f97316"></div>
+          <div class="session-card-accent" style="background:var(--accent-orange);"></div>
           <div class="session-tag">CIRCUIT A</div>
           <div class="session-name">Kettlebell Circuit A</div>
           <div class="session-sub">18 sets · 0:45/0:15 · 3 ronden</div>
           <div class="session-sets">6 oefeningen + finisher</div>
         </button>
+
         <button class="session-card" data-type="kettlebell-b">
-          <div class="session-card-accent" style="background:#f97316"></div>
+          <div class="session-card-accent" style="background:var(--accent-orange);"></div>
           <div class="session-tag">CIRCUIT B</div>
           <div class="session-name">Kettlebell Circuit B</div>
           <div class="session-sub">Sumo · Split Squat · Push Press · Thrusters</div>
           <div class="session-sets">24 sets · 0:45/0:15 · 3 ronden</div>
         </button>
+
         <button class="session-card" data-type="alan-a">
-          <div class="session-card-accent" style="background:#a855f7"></div>
+          <div class="session-card-accent" style="background:var(--accent-purple);"></div>
           <div class="session-tag">ALAN A</div>
           <div class="session-name">Alan Hanik A</div>
           <div class="session-sub">Step-up · RDL · Squat · Push-up</div>
           <div class="session-sets">18 sets · 0:45/0:15 · 3 ronden</div>
         </button>
+
         <button class="session-card" data-type="alan-b">
-          <div class="session-card-accent" style="background:#22c55e"></div>
+          <div class="session-card-accent" style="background:var(--accent-green);"></div>
           <div class="session-tag">ALAN B</div>
           <div class="session-name">Alan Hanik B</div>
           <div class="session-sub">Lunge · Swing · Ring Row · Split Squat</div>
           <div class="session-sets">18 sets · 0:45/0:15 · 3 ronden</div>
         </button>
+
         <button class="session-card" data-type="spartan-50">
-          <div class="session-card-accent" style="background:#ef4444"></div>
+          <div class="session-card-accent" style="background:var(--accent-red);"></div>
           <div class="session-tag">SPARTAN 50</div>
           <div class="session-name">The Spartan 50</div>
           <div class="session-sub">Burpees (3 Push-ups) + 3 Jump Squats</div>
           <div class="session-sets">1 set · Gewichtsvest</div>
         </button>
+
         <button class="session-card" data-type="bodyweight-murph">
-          <div class="session-card-accent" style="background:#6366f1"></div>
+          <div class="session-card-accent" style="background:var(--accent-indigo);"></div>
           <div class="session-tag">MURPH</div>
           <div class="session-name">Bodyweight Murph Variant</div>
           <div class="session-sub">Negatieve Pull-ups · Dips · Air Squats</div>
           <div class="session-sets">30 sets · 10 ronden · Met Vest</div>
         </button>
+
         <button class="session-card" data-type="kb-rope-amrap">
-          <div class="session-card-accent" style="background:#f43f5e"></div>
+          <div class="session-card-accent" style="background:var(--accent-rose);"></div>
           <div class="session-tag">AMRAP</div>
           <div class="session-name">KB & Springtouw AMRAP</div>
           <div class="session-sub">Double Unders · Cleans · Front Squats · Presses</div>
           <div class="session-sets">20 minuten · Maximaal resultaat</div>
         </button>
+
         <button class="session-card" data-type="ring-quest">
-          <div class="session-card-accent" style="background:#0ea5e9"></div>
+          <div class="session-card-accent" style="background:var(--accent-sky);"></div>
           <div class="session-tag">RING QUEST</div>
           <div class="session-name">The Ring Quest</div>
           <div class="session-sub">Ring Rows · Assisted Pull-ups · Support Holds</div>
           <div class="session-sets">5 oefeningen · Kracht & Controle</div>
         </button>
+
         <button class="session-card" data-type="snacks">
-          <div class="session-card-accent" style="background:#eab308"></div>
+          <div class="session-card-accent" style="background:var(--accent-yellow);"></div>
           <div class="session-tag">SNACK</div>
           <div class="session-name">Kettlebell Snacks</div>
           <div class="session-sub">5 mini-workouts · 5-10 min</div>
