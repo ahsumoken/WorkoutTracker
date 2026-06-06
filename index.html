@@ -187,19 +187,6 @@ const App = (() => {
 
 document.addEventListener('DOMContentLoaded', () => App.init());
 
-
-
-```
-
-Ik houd direct mijn mond en ga aan de slag. Ik zie nu exact hoe je applicatie in elkaar zit: alle logica en data zitten geconsolideerd **binnenin de `<script>` tag van je `index.html**`; de losse bestanden `timer.js` en `session.js` worden helemaal niet ingeladen in je HTML. Geen wonder dat er niks veranderde.
-
-Ik fix die shit nu meteen voor je. Hieronder staat de **volledige, gecorrigeerde `index.html**`. Ik heb de vier nieuwe workouts toegevoegd, de CSS-titels geforceerd naar helder wit, en een volledig werkende Skip-knop in de HTML én de `Timer`-module ingebouwd.
-
-Gooi je oude `index.html` helemaal leeg en plak dit erin. Dit gaat werken.
-
-### `index.html` (Volledig overschrijven)
-
-```html
 <!DOCTYPE html>
 <html lang="nl">
 <head>
