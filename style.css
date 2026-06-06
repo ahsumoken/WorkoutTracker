@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&display=swap');
-
 :root {
   --bg:     #0a0a0f;
   --bg-2:   #111118;
@@ -166,11 +164,11 @@ body { min-height: 100dvh; overflow-x: hidden; }
 .session-title-wrap { flex: 1; }
 .session-title {
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 18px; font-weight: 800; letter-spacing: .06em;
+  font-size: 24px; font-weight: 800; letter-spacing: .06em; color: #ffffff !important;
 }
 .session-time {
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 13px; color: var(--text-3); letter-spacing: .04em;
+  font-size: 13px; color: var(--text-2); letter-spacing: .04em;
 }
 .finish-btn {
   background: var(--accent-orange); color: #fff; border: none;
@@ -203,9 +201,9 @@ body { min-height: 100dvh; overflow-x: hidden; }
 .exercise-name-block { flex: 1; }
 .exercise-name {
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 17px; font-weight: 700; letter-spacing: .02em;
+  font-size: 20px; font-weight: 800; letter-spacing: .02em; color: #ffffff !important;
 }
-.exercise-spec { font-size: 11px; color: var(--text-3); margin-top: 1px; }
+.exercise-spec { font-size: 11px; color: var(--text-2); margin-top: 1px; }
 .pr-badge {
   background: rgba(34,197,94,0.15); color: var(--accent-green);
   border-radius: 4px; font-size: 11px; font-weight: 700;
@@ -263,9 +261,9 @@ body { min-height: 100dvh; overflow-x: hidden; }
   padding: 14px; display: flex; align-items: center; justify-content: space-between;
 }
 .circuit-start-label {
-  font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 800; color: #ffffff !important;
 }
-.circuit-sub { font-size: 12px; color: var(--text-3); }
+.circuit-sub { font-size: 12px; color: var(--text-2); }
 .btn-start-timer {
   background: var(--accent-orange); color: #fff; border: none;
   border-radius: var(--radius-sm);
@@ -284,10 +282,10 @@ body { min-height: 100dvh; overflow-x: hidden; }
   font-family: 'Barlow Condensed', sans-serif; font-size: 13px;
   font-weight: 700; color: var(--text-3); min-width: 20px;
 }
-.circuit-ex-name { flex: 1; font-size: 14px; }
+.circuit-ex-name { flex: 1; font-size: 14px; color: #ffffff !important; }
 .circuit-ex-weight {
   font-family: 'Barlow Condensed', sans-serif; font-size: 14px;
-  font-weight: 700; color: var(--text-3);
+  font-weight: 700; color: var(--text-2);
 }
 .circuit-log { padding: 12px 14px; border-top: 1px solid var(--border); }
 .circuit-log-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
@@ -315,7 +313,7 @@ body { min-height: 100dvh; overflow-x: hidden; }
 }
 .snack-option-name {
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 17px; font-weight: 700;
+  font-size: 18px; font-weight: 800; color: #ffffff !important;
 }
 .snack-option-badge {
   font-family: 'Barlow Condensed', sans-serif;
@@ -324,7 +322,7 @@ body { min-height: 100dvh; overflow-x: hidden; }
   background: rgba(234,179,8,0.12);
   border-radius: 4px; padding: 2px 7px;
 }
-.snack-option-desc { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+.snack-option-desc { font-size: 12px; color: var(--text-2); margin-top: 2px; }
 .snack-exercises { font-size: 12px; color: var(--text-2); margin-top: 5px; line-height: 1.6; }
 
 /* ─── SNACK TIMER AREA ─── */
@@ -394,8 +392,8 @@ body { min-height: 100dvh; overflow-x: hidden; }
   color: var(--text-2); letter-spacing: .06em;
 }
 .timer-exercise {
-  font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 800;
-  color: var(--text); margin-top: 4px;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 900;
+  color: #ffffff !important; margin-top: 4px;
 }
 .timer-controls { display: flex; gap: 12px; align-items: center; }
 .btn-timer {
@@ -419,7 +417,6 @@ body { min-height: 100dvh; overflow-x: hidden; }
   border-radius: var(--radius); overflow: hidden;
   z-index: 200; box-shadow: 0 8px 32px rgba(0,0,0,.6);
 }
-.rest-banner.hidden { display: none; }
 .rest-inner { display: flex; align-items: center; gap: 10px; padding: 10px 14px; }
 .rest-label {
   font-family: 'Barlow Condensed', sans-serif; font-size: 13px;
@@ -441,8 +438,6 @@ body { min-height: 100dvh; overflow-x: hidden; }
 .hidden { display: none !important; }
 
 /* ─── MODAL ─── */
-.modal { display: none; }
-.modal:not(.hidden) { position: fixed; inset: 0; z-index: 300; display: flex; align-items: flex-end; }
 .modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.7); backdrop-filter: blur(4px); }
 .modal-box {
   position: relative; background: var(--bg-2);
@@ -543,22 +538,3 @@ input[type="number"] { -moz-appearance: textfield; }
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--bg-4); border-radius: 2px; }
-
-/* ─── TOAST ─── */
-.toast {
-  position: fixed; bottom: calc(80px + var(--safe-bot)); left: 50%;
-  transform: translateX(-50%);
-  background: var(--bg-3); border: 1px solid var(--border-bright);
-  border-radius: var(--radius); color: var(--text);
-  font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 700;
-  letter-spacing: .06em; padding: 10px 20px; z-index: 400;
-  pointer-events: none;
-  animation: toastIn .2s ease, toastOut .3s ease 1.7s forwards;
-}
-@keyframes toastIn {
-  from { opacity: 0; transform: translateX(-50%) translateY(10px); }
-  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
-}
-@keyframes toastOut {
-  to { opacity: 0; transform: translateX(-50%) translateY(10px); }
-}
