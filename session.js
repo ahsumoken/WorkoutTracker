@@ -39,6 +39,14 @@ const Session = (() => {
       });
       sessionData._rpe = parseInt(document.getElementById('gym-rpe')?.value) || null;
       sessionData._note = document.getElementById('gym-note')?.value || '';
+    } else if (def.type === 'circuit') {
+      sessionData.rounds = parseInt(document.getElementById('cir-rounds')?.value) || 0;
+      sessionData.rpe = parseInt(document.getElementById('cir-rpe')?.value) || null;
+      sessionData.note = document.getElementById('cir-note')?.value || '';
+    } else if (def.type === 'snacks') {
+      sessionData.rounds = parseInt(document.getElementById('snack-rounds')?.value) || 0;
+      sessionData.rpe = parseInt(document.getElementById('snack-rpe')?.value) || null;
+      sessionData.note = document.getElementById('snack-note')?.value || '';
     }
 
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
@@ -198,14 +206,20 @@ const Session = (() => {
     exHtml += `</div>`;
 
     const prevBadge = prev?.rounds ? ` <span style="font-size:11px;color:var(--text-3)">Vorige: ${prev.rounds}</span>` : '';
+    
     exHtml += `<div class="circuit-log">
       <div class="circuit-log-grid">
-        <div class="log-field"><label>RONDEN${prevBadge}</label>
-          <input type="number" inputmode="numeric" id="cir-rounds" placeholder="${def.rounds}" min="0"></div>
-        <div class="log-field"><label>RPE (1-10)</label>
-          <input type="number" inputmode="numeric" id="cir-rpe" placeholder="7" min="1" max="10"></div>
+        <div class="field-group">
+          <label>RONDEN${prevBadge}</label>
+          <input type="number" inputmode="numeric" id="cir-rounds" placeholder="${def.rounds}" min="0">
+        </div>
+        <div class="field-group">
+          <label>RPE (1-10)</label>
+          <input type="number" inputmode="numeric" id="cir-rpe" placeholder="7" min="1" max="10">
+        </div>
       </div>
-      <div class="field-group"><label>NOTITIE</label>
+      <div class="field-group">
+        <label>NOTITIE</label>
         <textarea id="cir-note" placeholder="Hoe voelde het?" style="background:var(--bg-3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;padding:9px 12px;width:100%;resize:none;height:70px;"></textarea>
       </div>
       <div class="improved-hint" id="cir-pr" style="display:none">↑ Meer ronden dan vorige sessie!</div>
@@ -223,21 +237,48 @@ const Session = (() => {
     container.appendChild(exBlock);
 
     if (def.finisher) {
-      sessionData.finisher = def.finisher.map(f => ({ name: f.name, done: false }));
-      const fin = document.createElement('div');
-      fin.className = 'finisher-block';
-      fin.innerHTML = `<div class="finisher-title">FINISHER</div><div class="finisher-check" id="fin-checks"></div>`;
+      sessionData.finisher = def.finisher.map((f, i) => ({ id: `fin_${i}`, name: f.name, weight: '', reps: '' }));
       
+      const fin = document.createElement('div');
+      fin.className = 'exercise-block'; 
+      fin.style.border = '1px solid rgba(168,85,247,0.3)';
+      
+      let finHtml = `
+        <div class="exercise-block-header" style="background:rgba(168,85,247,0.04)">
+          <div class="exercise-num">FIN</div>
+          <div class="exercise-name-block">
+            <div class="exercise-name" style="color:var(--accent-purple) !important;">FINISHER PROTOCOL</div>
+            <div class="exercise-spec">Pas de herhalingen en gewichten hieronder handmatig aan</div>
+          </div>
+        </div>
+        <div class="sets-table">
+          <div class="set-headers" style="grid-template-columns: 1fr 80px 80px;">
+            <div class="set-label" style="text-align:left;">OEFENING</div>
+            <div class="set-label">KG</div>
+            <div class="set-label">REPS</div>
+          </div>`;
+          
       def.finisher.forEach((f, i) => {
-        const btn = document.createElement('button');
-        btn.className = 'check-btn';
-        btn.textContent = f.name;
-        btn.addEventListener('click', () => {
-          sessionData.finisher[i].done = !sessionData.finisher[i].done;
-          btn.classList.toggle('done', sessionData.finisher[i].done);
-        });
-        fin.querySelector('#fin-checks').appendChild(btn);
+        finHtml += `
+          <div class="set-row" style="grid-template-columns: 1fr 80px 80px; margin-bottom:8px;">
+            <div style="font-size:14px; color:#ffffff; font-weight:500;">${f.name}</div>
+            <input class="set-input" type="number" inputmode="decimal" placeholder="—" data-fin-idx="${i}" data-fin-f="weight">
+            <input class="set-input" type="number" inputmode="numeric" placeholder="10" data-fin-idx="${i}" data-fin-f="reps">
+          </div>`;
       });
+      
+      finHtml += `</div>`;
+      fin.innerHTML = finHtml;
+      
+      fin.querySelectorAll('.set-input').forEach(inp => {
+        inp.addEventListener('input', () => {
+          const idx = parseInt(inp.dataset.finIdx);
+          const field = inp.dataset.finF;
+          sessionData.finisher[idx][field] = inp.value;
+          saveState();
+        });
+      });
+      
       container.appendChild(fin);
     }
   }
@@ -284,10 +325,19 @@ const Session = (() => {
     logBlock.innerHTML = `
       <div class="circuit-log">
         <div class="circuit-log-grid">
-          <div class="log-field"><label>RONDEN</label><input type="number" inputmode="numeric" id="snack-rounds" placeholder="0"></div>
-          <div class="log-field"><label>RPE (1-10)</label><input type="number" inputmode="numeric" id="snack-rpe" placeholder="7"></div>
+          <div class="field-group">
+            <label>RONDEN</label>
+            <input type="number" inputmode="numeric" id="snack-rounds" placeholder="0">
+          </div>
+          <div class="field-group">
+            <label>RPE (1-10)</label>
+            <input type="number" inputmode="numeric" id="snack-rpe" placeholder="7">
+          </div>
         </div>
-        <div class="field-group"><label>NOTITIE</label><textarea id="snack-note" placeholder="Hoe voelde het?"></textarea></div>
+        <div class="field-group">
+          <label>NOTITIE</label>
+          <textarea id="snack-note" placeholder="Hoe voelde het?"></textarea>
+        </div>
       </div>`;
     
     logBlock.querySelector('#snack-rounds').addEventListener('input', e => { sessionData.rounds = parseInt(e.target.value) || 0; });
@@ -301,6 +351,7 @@ const Session = (() => {
     const btn = document.createElement('button');
     btn.className = 'btn-start-timer';
     btn.textContent = '▶ START SNACK KLOK';
+    
     btn.addEventListener('click', () => {
       if (typeof Timer !== 'undefined') {
         Timer.start({
@@ -334,12 +385,31 @@ const Session = (() => {
         exercises[ex.id] = { sets, note: n?.value || '', name: ex.name };
       });
       data = { ...data, exercises, globalRpe: sessionData._rpe, globalNote: sessionData._note };
-    } else {
-      data = { ...data, rounds: sessionData.rounds, rpe: sessionData.rpe, note: sessionData.note, finisher: sessionData.finisher || [] };
-      if (def.type === 'snacks') {
-        data.snackId = sessionData.snackId;
-        data.snackName = sessionData.snackName;
-      }
+    } else if (def.type === 'circuit') {
+      const savedFinisher = (sessionData.finisher || []).map((f, i) => {
+        const wInp = document.querySelector(`input[data-fin-idx="${i}"][data-fin-f="weight"]`);
+        const rInp = document.querySelector(`input[data-fin-idx="${i}"][data-fin-f="reps"]`);
+        return {
+          name: f.name,
+          weight: wInp ? wInp.value : '',
+          reps: rInp ? rInp.value : ''
+        };
+      });
+
+      data = { ...data,
+        rounds:   parseInt(document.getElementById('cir-rounds')?.value) || sessionData.rounds,
+        rpe:      parseInt(document.getElementById('cir-rpe')?.value) || sessionData.rpe,
+        note:     document.getElementById('cir-note')?.value || sessionData.note,
+        finisher: savedFinisher
+      };
+    } else if (def.type === 'snacks') {
+      data = { ...data,
+        snackId:   sessionData.snackId,
+        snackName: sessionData.snackName,
+        rounds:    parseInt(document.getElementById('snack-rounds')?.value) || sessionData.rounds,
+        rpe:       parseInt(document.getElementById('snack-rpe')?.value) || sessionData.rpe,
+        note:      document.getElementById('snack-note')?.value || sessionData.note
+      };
     }
 
     DB.saveSession(data);
@@ -355,6 +425,7 @@ const Session = (() => {
   function close() { stopClock(); currentType = null; sessionData = {}; sessionStorage.removeItem(STORAGE_KEY); if (typeof Timer !== 'undefined') Timer.stop(); }
   function isActive() { return currentType !== null || sessionStorage.getItem(STORAGE_KEY) !== null; }
   function activeType() { if (currentType) return currentType; try { return JSON.parse(sessionStorage.getItem(STORAGE_KEY))?.type; } catch(e) { return null; } }
+  
   function resume() {
     const saved = sessionStorage.getItem(STORAGE_KEY);
     if (!saved) return;
