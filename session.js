@@ -1,18 +1,13 @@
-// ─── SESSION MODULE ────────────────────────────────────────────────────────
+// ─── SESSION PROCESSOR MODULE ──────────────────────────────────────────────
 
 const Session = (() => {
   let currentType = null;
   let sessionData = {};
   let startTime   = null;
   let sessionIv   = null;
-  let wl          = null;
 
-  async function grabWL() {
-    if ('wakeLock' in navigator) { try { wl = await navigator.wakeLock.request('screen'); } catch(e) {} }
-  }
-  async function dropWL() {
-    if (wl) { try { await wl.release(); } catch(e) {} wl = null; }
-  }
+  async function grabWL() { await Timer.start; } 
+  async function dropWL() { await Timer.releaseWakeLock(); }
 
   function startClock() {
     startTime = Date.now();
@@ -28,27 +23,78 @@ const Session = (() => {
     return startTime ? Math.floor((Date.now() - startTime) / 1000) : 0;
   }
 
-  // ── PUBLIC: open ──────────────────────────────────────────────────────────
+  const STORAGE_KEY = 'trainlog_active_session';
+
+  function saveState() {
+    if (!currentType) return;
+    document.querySelectorAll('[data-ex]').forEach(inp => {
+      const ex = inp.dataset.ex, s = inp.dataset.s, f = inp.dataset.f;
+      if (ex && s !== undefined && f) {
+        if (!sessionData[ex]) sessionData[ex] = { sets: [], note: '', name: ex };
+        if (!sessionData[ex].sets[parseInt(s)]) sessionData[ex].sets[parseInt(s)] = {};
+        sessionData[ex].sets[parseInt(s)][f] = inp.value;
+      }
+    });
+    document.querySelectorAll('[data-ex].note-input, textarea[data-ex]').forEach(ta => {
+      const ex = ta.dataset.ex;
+      if (ex && sessionData[ex]) sessionData[ex].note = ta.value;
+    });
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
+      type: currentType,
+      data: sessionData,
+      elapsed: startTime ? Math.floor((Date.now() - startTime) / 1000) : 0
+    }));
+  }
+
+  function clearState() {
+    sessionStorage.removeItem(STORAGE_KEY);
+  }
+
+  function restoreInputs() {
+    Object.entries(sessionData).forEach(([exId, exData]) => {
+      exData.sets?.forEach((set, si) => {
+        ['weight','reps','rpe'].forEach(f => {
+          const inp = document.querySelector(`[data-ex="${exId}"][data-s="${si}"][data-f="${f}"]`);
+          if (inp && set[f]) inp.value = set[f];
+        });
+      });
+      if (exData.note) {
+        const ta = document.querySelector(`textarea[data-ex="${exId}"]`);
+        if (ta) ta.value = exData.note;
+      }
+    });
+  }
 
   function open(type) {
+    const saved = sessionStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.type === type) { resume(); return; }
+      } catch(e) {}
+    }
+
     currentType = type;
     sessionData = {};
+    clearState();
     const def = SESSION_TYPES[type];
     document.getElementById('session-title').textContent = def.name;
     document.getElementById('session-timer').textContent = '00:00';
     const content = document.getElementById('session-content');
     content.innerHTML = '';
 
-    if      (def.type === 'gym')    renderGym(def, content);
+    if      (def.type === 'gym')     renderGym(def, content);
     else if (def.type === 'circuit') renderCircuit(def, content);
     else if (def.type === 'snacks')  renderSnacks(def, content);
 
+    document.querySelectorAll('#session-content input, #session-content textarea').forEach(el => {
+      el.addEventListener('input', saveState);
+    });
+
     showScreen('screen-session');
     startClock();
-    grabWL();
+    saveState();
   }
-
-  // ── GYM ───────────────────────────────────────────────────────────────────
 
   function renderGym(def, container) {
     const prev = DB.getLastByType(currentType);
@@ -58,7 +104,6 @@ const Session = (() => {
       const block  = document.createElement('div');
       block.className = 'exercise-block';
 
-      // Header
       const hdr = document.createElement('div');
       hdr.className = 'exercise-block-header';
       hdr.innerHTML = `
@@ -72,7 +117,6 @@ const Session = (() => {
         </div>`;
       block.appendChild(hdr);
 
-      // Sets
       const tbl = document.createElement('div');
       tbl.className = 'sets-table';
       tbl.innerHTML = `<div class="set-headers">
@@ -103,7 +147,6 @@ const Session = (() => {
       }
       block.appendChild(tbl);
 
-      // Note
       const foot = document.createElement('div');
       foot.className = 'exercise-footer';
       foot.innerHTML = `<textarea class="note-input" placeholder="Notitie..." data-ex="${ex.id}"></textarea>`;
@@ -145,13 +188,10 @@ const Session = (() => {
     return d;
   }
 
-  // ── CIRCUIT ───────────────────────────────────────────────────────────────
-
   function renderCircuit(def, container) {
     const prev = DB.getLastByType(currentType);
     sessionData = { rounds: 0, rpe: null, note: '', finisher: [] };
 
-    // Timer launch block
     const startBlock = document.createElement('div');
     startBlock.className = 'circuit-block';
     const totalSets = def.exercises.length * def.rounds;
@@ -172,7 +212,6 @@ const Session = (() => {
       });
     });
 
-    // Exercise list
     const exBlock = document.createElement('div');
     exBlock.className = 'circuit-block';
     let exHtml = `<div style="padding:12px 14px;border-bottom:1px solid var(--border)"><div class="section-title">OEFENINGEN</div></div>
@@ -181,7 +220,7 @@ const Session = (() => {
       exHtml += `<div class="circuit-ex-row">
         <div class="circuit-ex-num">${i+1}</div>
         <div class="circuit-ex-name">${ex.name}</div>
-        <div class="circuit-ex-weight">${ex.defaultWeight}</div>
+        <div class="circuit-ex-weight">${ex.defaultWeight || 'eigen gew.'}</div>
       </div>`;
     });
     exHtml += `</div>`;
@@ -212,7 +251,6 @@ const Session = (() => {
     container.appendChild(startBlock);
     container.appendChild(exBlock);
 
-    // Finisher
     if (def.finisher) {
       sessionData.finisher = def.finisher.map(f => ({ name: f.name, done: false }));
       const fin = document.createElement('div');
@@ -235,23 +273,18 @@ const Session = (() => {
     }
   }
 
-  // ── SNACKS ────────────────────────────────────────────────────────────────
-
   function renderSnacks(def, container) {
     sessionData = { snackId: null, snackName: '', rounds: 0, rpe: null, note: '' };
 
-    // Title
     const title = document.createElement('div');
     title.className = 'section-title';
     title.style.marginBottom = '10px';
     title.textContent = 'KIES EEN SNACK';
     container.appendChild(title);
 
-    // Snack option cards
     const optList = document.createElement('div');
     optList.className = 'snack-options';
 
-    // Timer area (hidden until snack selected)
     const timerArea = document.createElement('div');
     timerArea.className = 'snack-timer-area';
     timerArea.id = 'snack-timer-area';
@@ -283,7 +316,6 @@ const Session = (() => {
     container.appendChild(optList);
     container.appendChild(timerArea);
 
-    // Log block (always visible)
     const logBlock = document.createElement('div');
     logBlock.className = 'circuit-block';
     logBlock.innerHTML = `
@@ -317,13 +349,11 @@ const Session = (() => {
     area.innerHTML = `<div class="snack-timer-title">TIMER — ${opt.name}</div>`;
 
     if (opt.protocol === 'AMRAP') {
-      // Simple stopwatch for AMRAP
-      let running = false, elapsed = 0, iv = null;
+      let running = false, iv = null;
       const display = document.createElement('div');
       display.style.cssText = 'font-family:"Barlow Condensed",sans-serif;font-size:48px;font-weight:900;color:var(--text);margin-bottom:10px';
       display.textContent = '10:00';
 
-      // Countdown from 10 min
       let remaining = 600;
       const btn = document.createElement('button');
       btn.className = 'btn-start-timer';
@@ -345,7 +375,6 @@ const Session = (() => {
       area.appendChild(display);
       area.appendChild(btn);
     } else {
-      // Ronden met rust-pauze
       let currentRound = 1;
       const totalRounds = opt.rounds || 3;
       const restSec = opt.restSec || 30;
@@ -367,10 +396,9 @@ const Session = (() => {
         btn.disabled = true;
         btn.textContent = 'BEZIG...';
 
-        // After pressing: show rest countdown (except after last round)
         const doneRound = currentRound;
         currentRound++;
-        sessionData.rounds = doneRound; // update live
+        sessionData.rounds = doneRound;
         document.getElementById('snack-rounds').value = doneRound;
 
         if (currentRound <= totalRounds && restSec > 0) {
@@ -413,8 +441,6 @@ const Session = (() => {
     document.getElementById('snack-pr').style.display = better ? 'flex' : 'none';
   }
 
-  // ── FINISH + SAVE ─────────────────────────────────────────────────────────
-
   function finish() {
     const def = SESSION_TYPES[currentType];
     const duration = stopClock();
@@ -423,7 +449,6 @@ const Session = (() => {
     let data = { type: currentType, timestamp: Date.now(), date: new Date().toISOString(), duration };
 
     if (def.type === 'gym') {
-      // Collect set inputs from DOM
       const exercises = {};
       def.exercises.forEach(ex => {
         const sets = [];
@@ -457,13 +482,61 @@ const Session = (() => {
     }
 
     DB.saveSession(data);
+    clearState();
+    currentType = null;
+    sessionData = {};
     showToast('Sessie opgeslagen! 💪');
     showScreen('screen-home');
     App.refreshHome();
     setTimeout(() => Export.showForSession(data), 600);
   }
 
-  function close() { stopClock(); dropWL(); currentType = null; sessionData = {}; }
+  function resume() {
+    const saved = sessionStorage.getItem(STORAGE_KEY);
+    if (!saved) return;
+    try {
+      const parsed = JSON.parse(saved);
+      currentType = parsed.type;
+      sessionData = parsed.data || {};
+      const elapsed = parsed.elapsed || 0;
 
-  return { open, finish, close };
+      const def = SESSION_TYPES[currentType];
+      if (!def) return;
+
+      document.getElementById('session-title').textContent = def.name;
+      const content = document.getElementById('session-content');
+      content.innerHTML = '';
+
+      if      (def.type === 'gym')     renderGym(def, content);
+      else if (def.type === 'circuit') renderCircuit(def, content);
+      else if (def.type === 'snacks')  renderSnacks(def, content);
+
+      restoreInputs();
+
+      document.querySelectorAll('#session-content input, #session-content textarea').forEach(el => {
+        el.addEventListener('input', saveState);
+      });
+
+      startTime = Date.now() - (elapsed * 1000);
+      const timerEl = document.getElementById('session-timer');
+      sessionIv = setInterval(() => {
+        const s = Math.floor((Date.now() - startTime) / 1000);
+        timerEl.textContent = `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+      }, 1000);
+
+      showScreen('screen-session');
+    } catch(e) { clearState(); }
+  }
+
+  function isActive() {
+    return currentType !== null || sessionStorage.getItem(STORAGE_KEY) !== null;
+  }
+  function activeType() {
+    if (currentType) return currentType;
+    try { return JSON.parse(sessionStorage.getItem(STORAGE_KEY))?.type; } catch(e) { return null; }
+  }
+
+  function close() { stopClock(); currentType = null; sessionData = {}; clearState(); Timer.stop(); RestBanner.hide(); }
+
+  return { open, finish, close, pause, resume, isActive, activeType };
 })();
