@@ -68,6 +68,12 @@ const Timer = (() => {
         gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
         osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+      } else if (type === 'countdown') {
+        // Korte, hoge waarschuwingspiep voor de 5s countdown
+        osc.frequency.value = 1200;
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.1);
       } else {
         [0, 0.2, 0.4].forEach(t => {
           const o = audioCtx.createOscillator();
@@ -114,8 +120,26 @@ const Timer = (() => {
     fg.style.strokeDashoffset = CIRC * (1 - seconds / duration);
     el('timer-set-info').textContent = `Set ${currentSet} / ${totalSets}`;
     el('timer-round-info').textContent = `Ronde ${currentRound} / ${totalRounds}`;
+    
+    // Huidige oefening bepalen
     const exIdx = (currentSet - 1) % exNames.length;
     el('timer-exercise-name').textContent = phase === 'roundRest' ? '— rust —' : (exNames[exIdx] || '');
+
+    // NIEUW: Bepaal en toon de VOLGENDE oefening
+    let nextExName = '—';
+    if (currentSet < totalSets) {
+      if (phase === 'work') {
+        // Tijdens werk is de volgende oefening degene na de rust (dus de oefening van de volgende set)
+        const nextIdx = currentSet % exNames.length;
+        nextExName = exNames[nextIdx] || '—';
+      } else {
+        // Tijdens rust staat de huidige set-oefening al klaar om te starten
+        nextExName = exNames[exIdx] || '—';
+      }
+    } else {
+      nextExName = 'Laatste set!';
+    }
+    el('timer-next-exercise-name').textContent = `Volgende: ${nextExName}`;
   }
 
   function next() {
@@ -173,6 +197,12 @@ const Timer = (() => {
   function tick() {
     if (!st) return;
     st.seconds--;
+    
+    // NIEUW: Als we in de rust of ronde-rust zitten, en er zijn nog 5 of minder seconden over, geef countdown beeps
+    if (st.phase !== 'work' && st.seconds <= 5 && st.seconds > 0) {
+      beep('countdown');
+    }
+
     if (st.seconds <= 0) { next(); } else { draw(); }
   }
 
