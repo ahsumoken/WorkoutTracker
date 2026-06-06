@@ -140,6 +140,26 @@ const Timer = (() => {
     draw();
   }
 
+  function skipExercise() {
+    if (!st) return;
+    const perRound = st.totalSets / st.totalRounds;
+    const isLastSetInRound = st.currentSet % perRound === 0;
+    const isLast = st.currentSet === st.totalSets;
+
+    if (isLast) {
+      beep('done'); stop();
+      if (st.onComplete) st.onComplete();
+      return;
+    }
+
+    if (isLastSetInRound) {
+      st.currentRound++; st.phase = 'roundRest'; st.seconds = st.roundRestSec; beep('rest');
+    } else {
+      st.currentSet++; st.phase = 'work'; st.seconds = st.workSec; beep('work');
+    }
+    draw();
+  }
+
   function start({ totalSets, totalRounds, workSec, restSec, roundRestSec, exercises, onComplete }) {
     initAudio();
     exNames = exercises || [];
@@ -174,7 +194,7 @@ const Timer = (() => {
 
   document.addEventListener('DOMContentLoaded', () => {
     el('btn-timer-pause').addEventListener('click', pause);
-    el('btn-timer-skip').addEventListener('click', () => { if (st) next(); });
+    el('btn-timer-skip').addEventListener('click', skipExercise);
     el('btn-timer-stop').addEventListener('click', stop);
   });
 
