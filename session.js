@@ -6,8 +6,8 @@ const Session = (() => {
   let startTime   = null;
   let sessionIv   = null;
 
-  async function grabWL() { await Timer.start; } 
-  async function dropWL() { await Timer.releaseWakeLock(); }
+  async function grabWL() { if (typeof Timer !== 'undefined' && Timer.start) return; } 
+  async function dropWL() { if (typeof Timer !== 'undefined' && Timer.releaseWakeLock) await Timer.releaseWakeLock(); }
 
   function startClock() {
     startTime = Date.now();
@@ -491,6 +491,8 @@ const Session = (() => {
     setTimeout(() => Export.showForSession(data), 600);
   }
 
+  function pause() { saveState(); stopClock(); dropWL(); if (typeof Timer !== 'undefined' && Timer.releaseWakeLock) Timer.releaseWakeLock(); }
+
   function resume() {
     const saved = sessionStorage.getItem(STORAGE_KEY);
     if (!saved) return;
@@ -536,7 +538,7 @@ const Session = (() => {
     try { return JSON.parse(sessionStorage.getItem(STORAGE_KEY))?.type; } catch(e) { return null; }
   }
 
-  function close() { stopClock(); currentType = null; sessionData = {}; clearState(); Timer.stop(); RestBanner.hide(); }
+  function close() { stopClock(); currentType = null; sessionData = {}; clearState(); if (typeof Timer !== 'undefined' && Timer.stop) Timer.stop(); if (typeof RestBanner !== 'undefined' && RestBanner.hide) RestBanner.hide(); }
 
   return { open, finish, close, pause, resume, isActive, activeType };
 })();
