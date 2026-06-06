@@ -1,22 +1,45 @@
-// ─── CIRCUIT TIMER ─────────────────────────────────────────────────────────
+// ─── CIRCUIT TIMER MODULE ──────────────────────────────────────────────────
 
 const Timer = (() => {
   let iv = null;
   let wl = null;
+  let wakeLockEnabled = false;
   let st = null;
   let exNames = [];
-  const CIRC = 2 * Math.PI * 88; // r=88
+  const CIRC = 2 * Math.PI * 88;
 
   function el(id) { return document.getElementById(id); }
 
   async function grabWakeLock() {
-    if ('wakeLock' in navigator) {
-      try { wl = await navigator.wakeLock.request('screen'); } catch(e) {}
+    if (!('wakeLock' in navigator)) return;
+    if (document.visibilityState !== 'visible') return;
+    wakeLockEnabled = true;
+    try {
+      wl = await navigator.wakeLock.request('screen');
+      wl.addEventListener('release', () => {
+        wl = null;
+        if (wakeLockEnabled && document.visibilityState === 'visible') {
+          setTimeout(grabWakeLock, 500);
+        }
+      });
+    } catch(e) {
+      if (wakeLockEnabled) setTimeout(grabWakeLock, 30000);
     }
   }
+
   async function dropWakeLock() {
+    wakeLockEnabled = false;
     if (wl) { try { await wl.release(); } catch(e) {} wl = null; }
   }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && wakeLockEnabled) {
+      if (wl) { try { wl.release(); } catch(e) {} wl = null; }
+      grabWakeLock();
+    } else if (document.visibilityState === 'hidden') {
+      wl = null;
+    }
+  });
 
   function beep(type) {
     try {
@@ -58,7 +81,7 @@ const Timer = (() => {
 
     const phaseEl = el('timer-phase');
     const fg = el('timer-ring-fg');
-    let duration = workSec;
+    let duration = workSec || 1;
     if (phase === 'work') {
       phaseEl.textContent = 'WERK'; phaseEl.className = 'timer-phase';
       fg.className = 'timer-ring-fg'; duration = workSec;
@@ -93,20 +116,29 @@ const Timer = (() => {
     draw();
   }
 
+  function skip() {
+    if (!st) return;
+    next();
+  }
+
   function tick() { if (!st) return; st.seconds--; st.seconds <= 0 ? next() : draw(); }
 
   function start({ totalSets, totalRounds, workSec, restSec, roundRestSec, exercises, onComplete }) {
     exNames = exercises || [];
     st = { totalSets, totalRounds, workSec, restSec, roundRestSec,
-           phase: 'work', currentSet: 1, currentRound: 1, seconds: workSec, paused: false, onComplete };
+           phase: 'work', currentSet: 1, currentRound: 1, seconds: workSec || 1, paused: false, onComplete };
     grabWakeLock();
-    el('modal-timer').classList.remove('hidden');
+    el('modal-timer').style.display='flex';
     draw(); beep('work');
-    iv = setInterval(tick, 1000);
+    if (workSec > 0) {
+      iv = setInterval(tick, 1000);
+    } else {
+      el('timer-display').textContent = 'GO!';
+    }
   }
 
   function pause() {
-    if (!st) return;
+    if (!st || st.workSec === 0) return;
     if (st.paused) {
       st.paused = false; iv = setInterval(tick, 1000);
       el('btn-timer-pause').innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
@@ -119,19 +151,16 @@ const Timer = (() => {
   function stop() {
     clearInterval(iv); iv = null; st = null; exNames = [];
     dropWakeLock();
-    el('modal-timer').classList.add('hidden');
+    el('modal-timer').style.display='none';
   }
-
-  document.addEventListener('visibilitychange', async () => {
-    if (document.visibilityState === 'visible' && iv && !wl) await grabWakeLock();
-  });
 
   document.addEventListener('DOMContentLoaded', () => {
     el('btn-timer-pause').addEventListener('click', pause);
+    el('btn-timer-skip').addEventListener('click', skip);
     el('btn-timer-stop').addEventListener('click', stop);
   });
 
-  return { start, stop, pause };
+  return { start, stop, pause, skip, releaseWakeLock: dropWakeLock };
 })();
 
 // ─── REST BANNER ───────────────────────────────────────────────────────────
@@ -145,7 +174,7 @@ const RestBanner = (() => {
     const banner = document.getElementById('rest-banner');
     const timeEl = document.getElementById('rest-time-display');
     const barEl  = document.getElementById('rest-bar');
-    banner.classList.remove('hidden');
+    banner.style.display='block';
     timeEl.textContent = rem;
     barEl.style.width = '100%';
     iv = setInterval(() => {
@@ -159,7 +188,7 @@ const RestBanner = (() => {
 
   function hide() {
     clearInterval(iv); iv = null;
-    document.getElementById('rest-banner').classList.add('hidden');
+    document.getElementById('rest-banner').style.display='none';
   }
 
   return { show, hide };
