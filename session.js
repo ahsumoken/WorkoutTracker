@@ -3,6 +3,7 @@ const Session = (() => {
   let sessionData = {};
   let startTime   = null;
   let sessionIv   = null;
+  let timerRunning = false; // Houdt bij of de training écht gestart is
   const STORAGE_KEY = 'trainlog_active_session';
 
   function startClock() {
@@ -21,7 +22,7 @@ const Session = (() => {
   }
 
   function saveState() {
-    if (!currentType) return;
+    if (!currentType || !timerRunning) return; // Sla NIETS op als de timer nog niet loopt
     
     const def = SESSION_TYPES[currentType];
     if (def.type === 'gym') {
@@ -59,24 +60,28 @@ const Session = (() => {
   function open(type) {
     currentType = type;
     sessionData = {};
-    sessionStorage.removeItem(STORAGE_KEY);
     const def = SESSION_TYPES[type];
     document.getElementById('session-title').textContent = def.name;
     document.getElementById('session-timer').textContent = '00:00';
     const content = document.getElementById('session-content');
     content.innerHTML = '';
 
-    if (def.type === 'gym') renderGym(def, content);
-    else if (def.type === 'circuit') renderCircuit(def, content);
-    else if (def.type === 'snacks') renderSnacks(def, content);
+    if (def.type === 'gym') {
+      renderGym(def, content);
+      timerRunning = true; // Gym start direct met de centrale klok
+      startClock();
+      saveState();
+    } else {
+      timerRunning = false; // Circuits en snacks wachten op de grote startknop
+      if (def.type === 'circuit') renderCircuit(def, content);
+      else if (def.type === 'snacks') renderSnacks(def, content);
+    }
 
     document.querySelectorAll('#session-content input, #session-content textarea').forEach(el => {
       el.addEventListener('input', saveState);
     });
 
     showScreen('screen-session');
-    startClock();
-    saveState();
   }
 
   function renderGym(def, container) {
@@ -183,6 +188,9 @@ const Session = (() => {
       </div>`;
     
     startBlock.querySelector('#btn-cir-start').addEventListener('click', () => {
+      timerRunning = true; // Activeer de status pas NA de klik
+      startClock();
+      saveState();
       if (typeof Timer !== 'undefined') {
         Timer.start({
           totalSets, totalRounds: def.rounds,
@@ -228,7 +236,9 @@ const Session = (() => {
 
     exBlock.querySelector('#cir-rounds').addEventListener('input', e => {
       sessionData.rounds = parseInt(e.target.value) || 0;
-      document.getElementById('cir-pr').style.display = (prev && sessionData.rounds > (prev.rounds || 0)) ? 'flex' : 'none';
+      if (timerRunning) {
+        document.getElementById('cir-pr').style.display = (prev && sessionData.rounds > (prev.rounds || 0)) ? 'flex' : 'none';
+      }
     });
     exBlock.querySelector('#cir-rpe').addEventListener('input', e => { sessionData.rpe = parseInt(e.target.value) || null; });
     exBlock.querySelector('#cir-note').addEventListener('input', e => { sessionData.note = e.target.value; });
@@ -353,6 +363,9 @@ const Session = (() => {
     btn.textContent = '▶ START SNACK KLOK';
     
     btn.addEventListener('click', () => {
+      timerRunning = true; // Activeer de status pas NA de klik
+      startClock();
+      saveState();
       if (typeof Timer !== 'undefined') {
         Timer.start({
           totalSets: opt.rounds || 1, totalRounds: 1,
@@ -416,14 +429,15 @@ const Session = (() => {
     sessionStorage.removeItem(STORAGE_KEY);
     currentType = null;
     sessionData = {};
+    timerRunning = false;
     showToast('Sessie succesvol opgeslagen! 💪');
     showScreen('screen-home');
     if (typeof App !== 'undefined') App.refreshHome();
   }
 
   function pause() { stopClock(); }
-  function close() { stopClock(); currentType = null; sessionData = {}; sessionStorage.removeItem(STORAGE_KEY); if (typeof Timer !== 'undefined') Timer.stop(); }
-  function isActive() { return currentType !== null || sessionStorage.getItem(STORAGE_KEY) !== null; }
+  function close() { stopClock(); currentType = null; sessionData = {}; timerRunning = false; sessionStorage.removeItem(STORAGE_KEY); if (typeof Timer !== 'undefined') Timer.stop(); }
+  function isActive() { return timerRunning && (currentType !== null || sessionStorage.getItem(STORAGE_KEY) !== null); }
   function activeType() { if (currentType) return currentType; try { return JSON.parse(sessionStorage.getItem(STORAGE_KEY))?.type; } catch(e) { return null; } }
   
   function resume() {
@@ -431,6 +445,7 @@ const Session = (() => {
     if (!saved) return;
     try {
       const parsed = JSON.parse(saved);
+      timerRunning = true;
       open(parsed.type);
     } catch(e) {}
   }
