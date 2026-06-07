@@ -69,7 +69,6 @@ const Timer = (() => {
         gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
         osc.start(); osc.stop(audioCtx.currentTime + 0.4);
       } else if (type === 'countdown') {
-        // Korte, hoge waarschuwingspiep voor de 5s countdown
         osc.frequency.value = 1200;
         gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
@@ -121,25 +120,26 @@ const Timer = (() => {
     el('timer-set-info').textContent = `Set ${currentSet} / ${totalSets}`;
     el('timer-round-info').textContent = `Ronde ${currentRound} / ${totalRounds}`;
     
-    // Huidige oefening bepalen
-    const exIdx = (currentSet - 1) % exNames.length;
-    el('timer-exercise-name').textContent = phase === 'roundRest' ? '— rust —' : (exNames[exIdx] || '');
-
-    // NIEUW: Bepaal en toon de VOLGENDE oefening
-    let nextExName = '—';
-    if (currentSet < totalSets) {
-      if (phase === 'work') {
-        // Tijdens werk is de volgende oefening degene na de rust (dus de oefening van de volgende set)
-        const nextIdx = currentSet % exNames.length;
-        nextExName = exNames[nextIdx] || '—';
-      } else {
-        // Tijdens rust staat de huidige set-oefening al klaar om te starten
-        nextExName = exNames[exIdx] || '—';
-      }
+    // JUISTE INDEX BEPALING VOOR HUIDIGE EN VOLGENDE OEFENING
+    let currentExIdx = (currentSet - 1) % exNames.length;
+    
+    if (phase === 'roundRest') {
+      el('timer-exercise-name').textContent = '— rust —';
+      let nextExIdx = currentSet % exNames.length;
+      el('timer-next-exercise-name').textContent = `Volgende: ${exNames[nextExIdx] || '—'}`;
+    } else if (phase === 'rest') {
+      // In rust staat de klok al op de volgende set, dus currentSet is al opgehoogd
+      el('timer-exercise-name').textContent = exNames[currentExIdx] || '';
+      let nextExIdx = currentSet % exNames.length;
+      let nextExName = (currentSet < totalSets) ? (exNames[nextExIdx] || '—') : 'Laatste set!';
+      el('timer-next-exercise-name').textContent = `Volgende: ${nextExName}`;
     } else {
-      nextExName = 'Laatste set!';
+      // In werkfase
+      el('timer-exercise-name').textContent = exNames[currentExIdx] || '';
+      let nextExIdx = currentSet % exNames.length;
+      let nextExName = (currentSet < totalSets) ? (exNames[nextExIdx] || '—') : 'Laatste set!';
+      el('timer-next-exercise-name').textContent = `Volgende: ${nextExName}`;
     }
-    el('timer-next-exercise-name').textContent = `Volgende: ${nextExName}`;
   }
 
   function next() {
@@ -198,7 +198,6 @@ const Timer = (() => {
     if (!st) return;
     st.seconds--;
     
-    // NIEUW: Als we in de rust of ronde-rust zitten, en er zijn nog 5 of minder seconden over, geef countdown beeps
     if (st.phase !== 'work' && st.seconds <= 5 && st.seconds > 0) {
       beep('countdown');
     }
