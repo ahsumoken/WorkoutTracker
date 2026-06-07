@@ -1,109 +1,138 @@
-let timerInterval = null;
-let currentSet = 1;
-let currentRound = 1;
-let isPause = false;
-let timeLeft = 45; 
-let currentPhase = "WERK"; // WERK of RUST
+const Timer = (() => {
+  let iv = null;
+  let isPaused = false;
+  let timeLeft = 0;
+  let currentPhase = 'WERK';
+  let currentSet = 0;
+  let currentRound = 1;
+  let opts = {};
 
-const workoutData = WorkoutDatabase["Kettlebell Circuit A"];
-const totalExercises = workoutData.exercises.length; // 6
-const totalSets = totalExercises * 3; // 18
+  const CIRCUMFERENCE = 2 * Math.PI * 88; // r=88
 
-function updateTimerDisplay() {
-  const minutes = Math.floor(timeLeft / 60);
-  const seconds = timeLeft % 60;
-  document.getElementById('timer-display').textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-  
-  // Progressiering updaten
-  const circle = document.getElementById('timer-ring-fg');
-  if (circle) {
-    const maxTime = currentPhase === "WERK" ? 45 : 15;
-    const offset = 552.92 - (timeLeft / maxTime) * 552.92;
-    circle.style.strokeDashoffset = offset;
+  function el(id) { return document.getElementById(id); }
+
+  function setRingProgress(fraction) {
+    const fg = el('timer-ring-fg');
+    if (fg) fg.style.strokeDashoffset = CIRCUMFERENCE * (1 - fraction);
   }
-}
 
-function updateExerciseNames() {
-  const currentExerciseIdx = (currentSet - 1) % totalExercises;
-  const nextExerciseIdx = currentSet % totalExercises;
-  
-  document.getElementById('timer-set-info').textContent = `Set ${currentSet} / ${totalSets}`;
-  document.getElementById('timer-round-info').textContent = `Ronde ${currentRound} / 3`;
-  
-  document.getElementById('timer-exercise-name').textContent = workoutData.exercises[currentExerciseIdx];
-  
-  if (currentSet < totalSets) {
-    document.getElementById('timer-next-exercise-name').textContent = `Volgende: ${workoutData.exercises[nextExerciseIdx]}`;
-  } else {
-    document.getElementById('timer-next-exercise-name').textContent = `Laatste set!`;
-  }
-}
+  function render() {
+    const m = Math.floor(timeLeft / 60);
+    const s = timeLeft % 60;
+    el('timer-display').textContent = `${m}:${s < 10 ? '0' : ''}${s}`;
+    el('timer-phase').textContent = currentPhase;
 
-function startTimerLogic() {
-  if (timerInterval) clearInterval(timerInterval);
-  
-  timerInterval = setInterval(() => {
-    if (!isPause) {
-      timeLeft--;
-      updateTimerDisplay();
-      
-      if (timeLeft <= 0) {
-        if (currentPhase === "WERK") {
-          // Naar rustfase
-          currentPhase = "RUST";
-          timeLeft = 15;
-          document.getElementById('timer-phase').textContent = "RUST";
-          document.getElementById('timer-phase').style.color = "#ff3333";
-        } else {
-          // Naar volgende werkset
-          currentPhase = "WERK";
-          timeLeft = 45;
-          document.getElementById('timer-phase').textContent = "WERK";
-          document.getElementById('timer-phase').style.color = "#00ff00";
-          
-          currentSet++;
-          currentRound = Math.ceil(currentSet / totalExercises);
-          
-          if (currentSet > totalSets) {
-            clearInterval(timerInterval);
-            document.getElementById('modal-timer').style.display = 'none';
-            alert("Workout Voltooid!");
-            return;
-          }
-        }
-        updateExerciseNames();
-        updateTimerDisplay();
-      }
+    const maxTime = currentPhase === 'WERK' ? opts.workSec : opts.restSec;
+    setRingProgress(maxTime > 0 ? timeLeft / maxTime : 1);
+
+    const totalSets = opts.totalSets || 1;
+    el('timer-set-info').textContent = `Set ${currentSet} / ${totalSets}`;
+    el('timer-round-info').textContent = `Ronde ${currentRound} / ${opts.totalRounds || 1}`;
+
+    const exList = opts.exercises || [];
+    const exIdx = (currentSet - 1) % exList.length;
+    el('timer-exercise-name').textContent = exList[exIdx] || '';
+
+    const nextSet = currentPhase === 'WERK' ? currentSet : currentSet + 1;
+    if (nextSet <= totalSets) {
+      const nextIdx = (nextSet - 1) % exList.length;
+      el('timer-next-exercise-name').textContent = `Volgende: ${exList[nextIdx] || ''}`;
+    } else {
+      el('timer-next-exercise-name').textContent = 'Laatste set!';
     }
-  }, 1000);
-}
+  }
 
-// Event Listeners voor de knoppen
-document.getElementById('btn-start-workout').addEventListener('click', () => {
-  currentSet = 1;
-  currentRound = 1;
-  currentPhase = "WERK";
-  timeLeft = 45;
-  isPause = false;
-  
-  document.getElementById('modal-timer').style.display = 'flex';
-  document.getElementById('timer-phase').textContent = "WERK";
-  
-  updateExerciseNames();
-  updateTimerDisplay();
-  startTimerLogic();
-});
+  function advance() {
+    if (currentPhase === 'WERK') {
+      if (opts.restSec > 0) {
+        currentPhase = 'RUST';
+        timeLeft = opts.restSec;
+      } else {
+        nextSet();
+      }
+    } else {
+      // Check if this was a round-rest (after last exercise of round)
+      nextSet();
+    }
+  }
 
-document.getElementById('btn-timer-pause').addEventListener('click', () => {
-  isPause = !isPause;
-  document.getElementById('btn-timer-pause').textContent = isPause ? "START" : "PAUZE";
-});
+  function nextSet() {
+    currentSet++;
+    const perRound = (opts.exercises || []).length;
+    currentRound = Math.ceil(currentSet / (perRound || 1));
 
-document.getElementById('btn-timer-stop').addEventListener('click', () => {
-  clearInterval(timerInterval);
-  document.getElementById('modal-timer').style.display = 'none';
-});
+    if (currentSet > (opts.totalSets || 1)) {
+      stop();
+      el('modal-timer').style.display = 'none';
+      if (typeof opts.onComplete === 'function') opts.onComplete();
+      return;
+    }
 
-document.getElementById('btn-timer-skip').addEventListener('click', () => {
-  timeLeft = 0; // Knal direct naar 0 om de fase-wissel te triggeren
-});
+    // Check if we just finished a round and need a round rest
+    const justFinishedRound = currentSet > 1 && ((currentSet - 1) % perRound === 0);
+    if (justFinishedRound && opts.roundRestSec > 0) {
+      currentPhase = 'RONDE RUST';
+      timeLeft = opts.roundRestSec;
+    } else {
+      currentPhase = 'WERK';
+      timeLeft = opts.workSec;
+    }
+  }
+
+  function tick() {
+    if (isPaused) return;
+    timeLeft--;
+    if (timeLeft <= 0) {
+      advance();
+    }
+    render();
+  }
+
+  function start(options) {
+    stop();
+    opts = options;
+    currentSet = 1;
+    currentRound = 1;
+    isPaused = false;
+    currentPhase = opts.workSec > 0 ? 'WERK' : 'RUST';
+    timeLeft = opts.workSec > 0 ? opts.workSec : opts.restSec;
+
+    el('modal-timer').style.display = 'flex';
+    render();
+    iv = setInterval(tick, 1000);
+  }
+
+  function stop() {
+    if (iv) { clearInterval(iv); iv = null; }
+    isPaused = false;
+  }
+
+  function skip() {
+    timeLeft = 0;
+    advance();
+    render();
+  }
+
+  // Button bindings
+  document.addEventListener('DOMContentLoaded', () => {
+    el('btn-timer-pause').addEventListener('click', () => {
+      isPaused = !isPaused;
+      const svg_pause = `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`;
+      const svg_play  = `<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
+      el('btn-timer-pause').innerHTML = isPaused ? svg_play : svg_pause;
+    });
+
+    el('btn-timer-skip').addEventListener('click', skip);
+
+    el('btn-timer-stop').addEventListener('click', () => {
+      stop();
+      el('modal-timer').style.display = 'none';
+    });
+
+    el('modal-timer-backdrop').addEventListener('click', () => {
+      // backdrop click does nothing — prevent accidental close during workout
+    });
+  });
+
+  return { start, stop, skip };
+})();

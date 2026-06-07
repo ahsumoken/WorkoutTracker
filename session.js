@@ -22,7 +22,10 @@ const Session = (() => {
   }
 
   function saveState() {
-    if (!currentType || !timerRunning) return; // Sla NIETS op als de timer nog niet loopt
+    if (!currentType) return;
+    // For gym sessions timerRunning is set before saveState; for circuits/snacks we only
+    // save after the START button is pressed. Skip silently if not yet running.
+    if (!timerRunning) return;
     
     const def = SESSION_TYPES[currentType];
     if (def.type === 'gym') {
@@ -66,13 +69,14 @@ const Session = (() => {
     const content = document.getElementById('session-content');
     content.innerHTML = '';
 
+    const resuming = timerRunning; // may be true when called from resume()
     if (def.type === 'gym') {
       renderGym(def, content);
-      timerRunning = true; // Gym start direct met de centrale klok
+      timerRunning = true;
       startClock();
       saveState();
     } else {
-      timerRunning = false; // Circuits en snacks wachten op de grote startknop
+      if (!resuming) timerRunning = false; // only reset if not resuming a saved session
       if (def.type === 'circuit') renderCircuit(def, content);
       else if (def.type === 'snacks') renderSnacks(def, content);
     }
@@ -437,7 +441,11 @@ const Session = (() => {
 
   function pause() { stopClock(); }
   function close() { stopClock(); currentType = null; sessionData = {}; timerRunning = false; sessionStorage.removeItem(STORAGE_KEY); if (typeof Timer !== 'undefined') Timer.stop(); }
-  function isActive() { return timerRunning && (currentType !== null || sessionStorage.getItem(STORAGE_KEY) !== null); }
+  function isActive() {
+    if (timerRunning && currentType !== null) return true;
+    // After page reload timerRunning is false but a saved session may still exist
+    return sessionStorage.getItem(STORAGE_KEY) !== null;
+  }
   function activeType() { if (currentType) return currentType; try { return JSON.parse(sessionStorage.getItem(STORAGE_KEY))?.type; } catch(e) { return null; } }
   
   function resume() {
