@@ -1,255 +1,160 @@
-// ─── SESSION DEFINITIONS ───────────────────────────────────────────────────
-
 const SESSION_TYPES = {
   'compounds-a': {
     name: 'Compounds A',
-    tag: 'GYM A',
-    color: '#3b82f6',
     type: 'gym',
     exercises: [
-      { id: 'squat',    name: 'Squat',            sets: 4, reps: '8-10'  },
-      { id: 'deadlift',  name: 'Deadlift',         sets: 3, reps: '6-8'   },
-      { id: 'bench',     name: 'Bench Press',      sets: 4, reps: '8-10'  },
-      { id: 'bbrow',     name: 'Barbell Row',      sets: 4, reps: '8-10'  },
-      { id: 'ohp',       name: 'OHP',              sets: 3, reps: '10-12' },
-      { id: 'plank',     name: 'Plank',            sets: 3, reps: '45sec' },
+      { id: 'squat', name: 'Barbell Squat', sets: 4, reps: '6-8' },
+      { id: 'deadlift', name: 'Conventional Deadlift', sets: 3, reps: '5' },
+      { id: 'bench', name: 'Barbell Bench Press', sets: 4, reps: '6-8' },
+      { id: 'row', name: 'Barbell Row', sets: 3, reps: '8-10' },
+      { id: 'ohp', name: 'Overhead Press', sets: 3, reps: '8-10' }
     ]
   },
   'compounds-b': {
     name: 'Compounds B',
-    tag: 'GYM B',
-    color: '#06b6d4',
     type: 'gym',
     exercises: [
-      { id: 'rdl',        name: 'RDL',                      sets: 4, reps: '10-12' },
-      { id: 'incbench',   name: 'Incline Bench',            sets: 4, reps: '10-12' },
-      { id: 'pullup',     name: 'Pull-up / Lat Pulldown',  sets: 4, reps: '8-10'  },
-      { id: 'dbshoulder', name: 'DB Shoulder Press',       sets: 3, reps: '12-15' },
-      { id: 'latraise',   name: 'Lateral Raise',            sets: 3, reps: '15'    },
-      { id: 'cablerow',   name: 'Cable Row',                sets: 3, reps: '12-15' },
-      { id: 'abwheel',    name: 'Ab Wheel',                 sets: 3, reps: '12-15' },
+      { id: 'rdl', name: 'Romanian Deadlift', sets: 4, reps: '8-10' },
+      { id: 'incline', name: 'Incline DB Press', sets: 4, reps: '8-10' },
+      { id: 'pullup', name: 'Weighted Pull-up', sets: 4, reps: '6-8' },
+      { id: 'lateral', name: 'Lateral Raise', sets: 3, reps: '12-15' },
+      { id: 'biceps', name: 'Incline DB Curl', sets: 3, reps: '10-12' },
+      { id: 'triceps', name: 'Triceps Overhead Extension', sets: 3, reps: '10-12' }
     ]
   },
   'kettlebell': {
-    name: 'Kettlebell Circuit',
-    tag: 'CIRCUIT',
-    color: '#f97316',
+    name: 'Kettlebell Circuit A',
     type: 'circuit',
     rounds: 3,
     workSec: 45,
     restSec: 15,
-    roundRestSec: 90,
+    roundRestSec: 60,
     exercises: [
-      { id: 'kbswing',  name: 'Kettlebell Swing',  defaultWeight: '20kg'        },
-      { id: 'goblet',   name: 'Goblet Squat',      defaultWeight: '20kg'        },
-      { id: 'cp',       name: 'Clean & Press',     defaultWeight: '2×16kg'      },
-      { id: 'burpees',  name: 'Burpees',           defaultWeight: 'eigen gew.'  },
-      { id: 'kbrdl',    name: 'Romanian Deadlift', defaultWeight: '2×20kg'      },
-      { id: 'renrow',   name: 'Renegade Row',      defaultWeight: '2×16kg'      },
+      { name: 'KB Goblet Squat', defaultWeight: '24kg' },
+      { name: 'KB Two-Handed Swing', defaultWeight: '32kg' },
+      { name: 'KB Overhead Press (R)', defaultWeight: '16kg' },
+      { name: 'KB Overhead Press (L)', defaultWeight: '16kg' },
+      { name: 'KB Gorilla Row', defaultWeight: '2x20kg' },
+      { name: 'Push-ups', defaultWeight: 'eigen gew.' }
     ],
     finisher: [
-      { id: 'fin_pull', name: 'Negatieve Pull-ups', sets: 3, reps: 10 },
-      { id: 'fin_dips', name: 'Bench Dips',         sets: 3, reps: 10 }
+      { name: 'Negatieve Pull-ups' },
+      { name: 'Ab Wheel Rollouts' }
     ]
   },
   'kettlebell-b': {
     name: 'Kettlebell Circuit B',
-    tag: 'CIRCUIT B',
-    color: '#f97316',
     type: 'circuit',
     rounds: 3,
     workSec: 45,
     restSec: 15,
-    roundRestSec: 90,
+    roundRestSec: 60,
     exercises: [
-      { id: 'sumodl',     name: 'Sumo Deadlift',         defaultWeight: '2×20kg'      },
-      { id: 'bulgsplit',  name: 'Bulgarian Split Squat', defaultWeight: '2×16kg'      },
-      { id: 'pushpress',  name: 'Push Press',            defaultWeight: '2×16kg'      },
-      { id: 'sqthruster', name: 'Squat Thrusters',       defaultWeight: '20kg'        },
-      { id: 'slrdl_l',    name: 'Single Leg RDL (L)',    defaultWeight: '1×20kg'      },
-      { id: 'slrdl_r',    name: 'Single Leg RDL (R)',    defaultWeight: '1×20kg'      },
-      { id: 'sarow_l',    name: 'Single Arm Row (L)',    defaultWeight: '1×20kg'      },
-      { id: 'sarow_r',    name: 'Single Arm Row (R)',    defaultWeight: '1×20kg'      },
-    ],
-    finisher: null
+      { name: 'KB Sumo Deadlift', defaultWeight: '32kg' },
+      { name: 'KB Bulgarian Split Squat (R)', defaultWeight: '16kg' },
+      { name: 'KB Bulgarian Split Squat (L)', defaultWeight: '16kg' },
+      { name: 'KB Push Press (R)', defaultWeight: '20kg' },
+      { name: 'KB Push Press (L)', defaultWeight: '20kg' },
+      { name: 'KB Hand-to-Hand Swing', defaultWeight: '24kg' },
+      { name: 'KB Clean & Thruster (R)', defaultWeight: '16kg' },
+      { name: 'KB Clean & Thruster (L)', defaultWeight: '16kg' }
+    ]
   },
   'alan-a': {
     name: 'Alan Hanik A',
-    tag: 'ALAN A',
-    color: '#a855f7',
     type: 'circuit',
     rounds: 3,
     workSec: 45,
     restSec: 15,
-    roundRestSec: 90,
+    roundRestSec: 60,
     exercises: [
-      { id: 'stepupcurl', name: 'Step-up + KB Curl',   defaultWeight: '1×16kg'     },
-      { id: 'aardl',      name: 'Romanian Deadlift',   defaultWeight: '2×20kg'     },
-      { id: 'aagoblet',   name: 'Goblet Squat',        defaultWeight: '20kg'       },
-      { id: 'pushup',     name: 'Push-up normaal',     defaultWeight: 'eigen gew.' },
-      { id: 'negpull',    name: 'Negatieve Pull-up',   defaultWeight: 'eigen gew.' },
-      { id: 'aaburpees',  name: 'Burpees',             defaultWeight: 'eigen gew.' },
-    ],
-    finisher: null
+      { name: 'Deficit KB Step-up (R)', defaultWeight: '2x16kg' },
+      { name: 'Deficit KB Step-up (L)', defaultWeight: '2x16kg' },
+      { name: 'KB Romanian Deadlift', defaultWeight: '2x24kg' },
+      { name: 'KB Front Squat', defaultWeight: '2x20kg' },
+      { name: 'Feet-Elevated Push-up', defaultWeight: 'eigen gew.' },
+      { name: 'Inverted Ring Row', defaultWeight: 'eigen gew.' }
+    ]
   },
   'alan-b': {
     name: 'Alan Hanik B',
-    tag: 'ALAN B',
-    color: '#22c55e',
     type: 'circuit',
     rounds: 3,
     workSec: 45,
     restSec: 15,
-    roundRestSec: 90,
+    roundRestSec: 60,
     exercises: [
-      { id: 'lungecurl',  name: 'Lunge + KB Curl',        defaultWeight: '1×16kg'     },
-      { id: 'abswing',    name: 'Kettlebell Swing',       defaultWeight: '20kg'       },
-      { id: 'ringrow',    name: 'Ring Row / TRX Row',     defaultWeight: 'eigen gew.' },
-      { id: 'elevpush',   name: 'Push-up voeten op bank', defaultWeight: 'eigen gew.' },
-      { id: 'splitsq',    name: 'Split Squat',            defaultWeight: '2×16kg'     },
-      { id: 'mtclimb',    name: 'Mountain Climbers',      defaultWeight: 'eigen gew.' },
-    ],
-    finisher: null
+      { name: 'KB Walking Lunge', defaultWeight: '2x16kg' },
+      { name: 'KB Cleans', defaultWeight: '2x20kg' },
+      { name: 'Heavy KB Swing', defaultWeight: '40kg' },
+      { name: 'Ring Dip (Assisted)', defaultWeight: 'eigen gew.' },
+      { name: 'KB Airborne Split Squat (R)', defaultWeight: '12kg' },
+      { name: 'KB Airborne Split Squat (L)', defaultWeight: '12kg' }
+    ]
   },
   'spartan-50': {
     name: 'The Spartan 50',
-    tag: 'SPARTAN 50',
-    color: '#ef4444',
     type: 'circuit',
     rounds: 1,
     workSec: 0,
     restSec: 0,
     exercises: [
-      { id: 'spartan_rep', name: '1x Burpee (3 Push-ups) + 3x Jump Squats', defaultWeight: 'Gewichtsvest' }
-    ],
-    finisher: null
+      { name: 'Burpee (3 Push-ups) + 3 Jump Squats', defaultWeight: 'Vest 10kg' }
+    ]
   },
   'bodyweight-murph': {
     name: 'Bodyweight Murph Variant',
-    tag: 'MURPH',
-    color: '#6366f1',
     type: 'circuit',
     rounds: 10,
-    workSec: 0, 
-    restSec: 0,
-    exercises: [
-      { id: 'm_pull',  name: 'Negatieve Pull-up (3-5s zakken)', defaultWeight: 'ZONDER vest' },
-      { id: 'm_dips',  name: 'Dips (op dipstangen)',           defaultWeight: 'Lichaamsgewicht' },
-      { id: 'm_squat', name: 'Air Squats',                     defaultWeight: 'Met Gewichtsvest' }
-    ],
-    finisher: null
-  },
-  'kb-rope-amrap': {
-    name: 'KB & Springtouw AMRAP',
-    tag: 'AMRAP',
-    color: '#f43f5e',
-    type: 'circuit',
-    rounds: 1,
-    workSec: 1200, 
-    restSec: 0,
-    exercises: [
-      { id: 'am_rope',  name: '100x Double Unders / 200x Normaal', defaultWeight: 'Springtouw' },
-      { id: 'am_clean', name: '15x Double KB Cleans',            defaultWeight: '2×16kg of 2×20kg' },
-      { id: 'am_squat', name: '15x Front Squats (Rack)',          defaultWeight: '2×16kg of 2×20kg' },
-      { id: 'am_press', name: '10x Clean & Presses',              defaultWeight: '2×16kg' }
-    ],
-    finisher: null
-  },
-  'ring-quest': {
-    name: 'The Ring Quest',
-    tag: 'RING QUEST',
-    color: '#0ea5e9',
-    type: 'circuit',
-    rounds: 1,
     workSec: 0,
     restSec: 0,
     exercises: [
-      { id: 'r_row',     name: 'Ring Rows (Horizontaal)',         defaultWeight: 'Lichaamsgewicht' },
-      { id: 'r_assist',  name: 'Assisted Pull-ups (Self-Spot)',   defaultWeight: 'Voeten op de grond' },
-      { id: 'r_neg',     name: 'Ring Negatives (5s zakken)',      defaultWeight: 'ZONDER vest' },
-      { id: 'r_support', name: 'Ring Support Hold',               defaultWeight: 'Bovenin vasthouden' },
-      { id: 'r_kbrow',   name: 'Heavy Single Arm KB Rows',        defaultWeight: '20kg' }
-    ],
-    finisher: null
+      { name: 'Negatieve Pull-ups', defaultWeight: 'Vest 10kg' },
+      { name: 'Dips / Push-ups', defaultWeight: 'Vest 10kg' },
+      { name: 'Air Squats', defaultWeight: 'Vest 10kg' }
+    ]
+  },
+  'kb-rope-amrap': {
+    name: 'KB & Springtouw AMRAP',
+    type: 'circuit',
+    rounds: 1,
+    workSec: 1200,
+    restSec: 0,
+    exercises: [
+      { name: 'Double Unders / Cleans / Front Squats / Presses', defaultWeight: '24kg' }
+    ]
+  },
+  'ring-quest': {
+    name: 'The Ring Quest',
+    type: 'circuit',
+    rounds: 3,
+    workSec: 0,
+    restSec: 90,
+    exercises: [
+      { name: 'Inverted Ring Rows', defaultWeight: 'eigen gew.' },
+      { name: 'Assisted Pull-ups (Bar)', defaultWeight: 'eigen gew.' },
+      { name: 'Ring Support Holds', defaultWeight: 'eigen gew.' },
+      { name: 'Push-ups on Rings', defaultWeight: 'eigen gew.' },
+      { name: 'Hanging Leg Raises', defaultWeight: 'eigen gew.' }
+    ]
   },
   'snacks': {
     name: 'Kettlebell Snacks',
-    tag: 'SNACK',
-    color: '#eab308',
     type: 'snacks',
     options: [
-      {
-        id: 'power',
-        name: 'Snack 1 — Power',
-        duration: '5 min',
-        protocol: '5 ronden · geen rust',
-        rounds: 5,
-        restSec: 0,
-        exercises: [ 'KB Swing 20kg × 10', 'Burpees × 5' ]
-      },
-      {
-        id: 'upper',
-        name: 'Snack 2 — Upper Body',
-        duration: '7 min',
-        protocol: '3 ronden · 30sec rust',
-        rounds: 3,
-        restSec: 30,
-        exercises: [ 'Renegade Row 2×16kg × 10', 'Clean & Press 2×16kg × 10', 'Bench Dips × 10' ]
-      },
-      {
-        id: 'lower',
-        name: 'Snack 3 — Lower Body',
-        duration: '7 min',
-        protocol: '3 ronden · 30sec rust',
-        rounds: 3,
-        restSec: 30,
-        exercises: [ 'KB Swing 20kg × 15', 'Goblet Squat 20kg × 10', 'RDL 2×20kg × 10' ]
-      },
-      {
-        id: 'core',
-        name: 'Snack 4 — Core & Pull',
-        duration: '5 min',
-        protocol: '3 ronden · 30sec rust',
-        rounds: 3,
-        restSec: 30,
-        exercises: [ 'Negatieve pull-ups × 10', 'Renegade Row 2×16kg × 10' ]
-      },
-      {
-        id: 'fullbody',
-        name: 'Snack 5 — Full Body Express',
-        duration: '10 min',
-        protocol: 'AMRAP',
-        rounds: null,
-        restSec: 0,
-        exercises: [ 'KB Swing 20kg × 10', 'Goblet Squat 20kg × 5', 'Burpees × 5', 'Clean & Press 2×16kg × 5' ]
-      }
+      { id: 'snack-power', name: 'KB Power Snack', duration: '5 min', protocol: '10 Swings + 5 Burpees elke minuut (EMOM)', rounds: 5, restSec: 60, exercises: ['10 Live Swings + 5 Burpees'] },
+      { id: 'snack-upper', name: 'KB Upper Body Snack', duration: '8 min', protocol: 'AMRAP van Clean, Press en Halo', rounds: 1, restSec: 480, exercises: ['Clean + Press + Halo AMRAP'] },
+      { id: 'snack-lower', name: 'KB Lower Body Snack', duration: '6 min', protocol: 'Goblet Squats en Lunges non-stop', rounds: 6, restSec: 60, exercises: ['Goblet Squats + Lunges'] },
+      { id: 'snack-core', name: 'KB Core Snack', duration: '5 min', protocol: 'Planks en Slingshots rondom het lichaam', rounds: 5, restSec: 60, exercises: ['Plank + Slingshot Combo'] },
+      { id: 'snack-full', name: 'KB Full Body Snack', duration: '10 min', protocol: 'Thrusters en Swings piramide', rounds: 1, restSec: 600, exercises: ['Thrusters + Swings Piramide'] }
     ]
   }
 };
 
-// ─── STORAGE ───────────────────────────────────────────────────────────────
-
-const DB = {
-  KEY: 'trainlog_sessions',
-
-  getSessions() {
-    try { return JSON.parse(localStorage.getItem(this.KEY) || '[]'); }
-    catch { return []; }
-  },
-
-  saveSession(s) {
-    const all = this.getSessions();
-    all.unshift(s);
-    localStorage.setItem(this.KEY, JSON.stringify(all));
-  },
-
-  getLastByType(type) {
-    return this.getSessions().find(s => s.type === type) || null;
-  },
-
-  getLastSnack(snackId) {
-    return this.getSessions().find(s => s.type === 'snacks' && s.snackId === snackId) || null;
-  },
-
-  getAll() { return this.getSessions(); }
-};
+const DB = (() => {
+  const KEY = 'trainlog_workout_history';
+  function getAll() { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch(e) { return []; } }
+  function saveSession(s) { const all = getAll(); all.unshift(s); localStorage.setItem(KEY, JSON.stringify(all)); }
+  function getLastByType(t) { return getAll().find(s => s.type === t) || null; }
+  return { getAll, saveSession, getLastByType };
+})();
