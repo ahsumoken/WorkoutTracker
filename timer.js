@@ -1,250 +1,109 @@
-const Timer = (() => {
-  let iv = null;
-  let wl = null;
-  let wakeLockEnabled = false;
-  let st = null;
-  let exNames = [];
-  let audioCtx = null;
-  const CIRC = 2 * Math.PI * 88;
+let timerInterval = null;
+let currentSet = 1;
+let currentRound = 1;
+let isPause = false;
+let timeLeft = 45; 
+let currentPhase = "WERK"; // WERK of RUST
 
-  function el(id) { return document.getElementById(id); }
+const workoutData = WorkoutDatabase["Kettlebell Circuit A"];
+const totalExercises = workoutData.exercises.length; // 6
+const totalSets = totalExercises * 3; // 18
 
-  function initAudio() {
-    if (!audioCtx) {
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    if (audioCtx.state === 'suspended') {
-      audioCtx.resume();
-    }
+function updateTimerDisplay() {
+  const minutes = Math.floor(timeLeft / 60);
+  const seconds = timeLeft % 60;
+  document.getElementById('timer-display').textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+  
+  // Progressiering updaten
+  const circle = document.getElementById('timer-ring-fg');
+  if (circle) {
+    const maxTime = currentPhase === "WERK" ? 45 : 15;
+    const offset = 552.92 - (timeLeft / maxTime) * 552.92;
+    circle.style.strokeDashoffset = offset;
   }
+}
 
-  async function grabWakeLock() {
-    if (!('wakeLock' in navigator)) return;
-    if (document.visibilityState !== 'visible') return;
-    wakeLockEnabled = true;
-    try {
-      wl = await navigator.wakeLock.request('screen');
-      wl.addEventListener('release', () => {
-        wl = null;
-        if (wakeLockEnabled && document.visibilityState === 'visible') {
-          setTimeout(grabWakeLock, 500);
+function updateExerciseNames() {
+  const currentExerciseIdx = (currentSet - 1) % totalExercises;
+  const nextExerciseIdx = currentSet % totalExercises;
+  
+  document.getElementById('timer-set-info').textContent = `Set ${currentSet} / ${totalSets}`;
+  document.getElementById('timer-round-info').textContent = `Ronde ${currentRound} / 3`;
+  
+  document.getElementById('timer-exercise-name').textContent = workoutData.exercises[currentExerciseIdx];
+  
+  if (currentSet < totalSets) {
+    document.getElementById('timer-next-exercise-name').textContent = `Volgende: ${workoutData.exercises[nextExerciseIdx]}`;
+  } else {
+    document.getElementById('timer-next-exercise-name').textContent = `Laatste set!`;
+  }
+}
+
+function startTimerLogic() {
+  if (timerInterval) clearInterval(timerInterval);
+  
+  timerInterval = setInterval(() => {
+    if (!isPause) {
+      timeLeft--;
+      updateTimerDisplay();
+      
+      if (timeLeft <= 0) {
+        if (currentPhase === "WERK") {
+          // Naar rustfase
+          currentPhase = "RUST";
+          timeLeft = 15;
+          document.getElementById('timer-phase').textContent = "RUST";
+          document.getElementById('timer-phase').style.color = "#ff3333";
+        } else {
+          // Naar volgende werkset
+          currentPhase = "WERK";
+          timeLeft = 45;
+          document.getElementById('timer-phase').textContent = "WERK";
+          document.getElementById('timer-phase').style.color = "#00ff00";
+          
+          currentSet++;
+          currentRound = Math.ceil(currentSet / totalExercises);
+          
+          if (currentSet > totalSets) {
+            clearInterval(timerInterval);
+            document.getElementById('modal-timer').style.display = 'none';
+            alert("Workout Voltooid!");
+            return;
+          }
         }
-      });
-    } catch (e) {
-      if (wakeLockEnabled) setTimeout(grabWakeLock, 30000);
-    }
-  }
-
-  async function dropWakeLock() {
-    wakeLockEnabled = false;
-    if (wl) { try { await wl.release(); } catch (e) {} wl = null; }
-  }
-
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible' && wakeLockEnabled) {
-      if (wl) { try { wl.release(); } catch (e) {} wl = null; }
-      grabWakeLock();
-    } else if (document.visibilityState === 'hidden') {
-      wl = null;
-    }
-  });
-
-  function beep(type) {
-    if (!audioCtx) return;
-    try {
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.type = 'sine';
-
-      if (type === 'work') {
-        osc.frequency.value = 880;
-        gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
-        osc.start(); osc.stop(audioCtx.currentTime + 0.25);
-      } else if (type === 'rest') {
-        osc.frequency.value = 440;
-        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
-        osc.start(); osc.stop(audioCtx.currentTime + 0.4);
-      } else if (type === 'countdown') {
-        osc.frequency.value = 1200;
-        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
-        osc.start(); osc.stop(audioCtx.currentTime + 0.1);
-      } else {
-        [0, 0.2, 0.4].forEach(t => {
-          const o = audioCtx.createOscillator();
-          const g = audioCtx.createGain();
-          o.connect(g); g.connect(audioCtx.destination);
-          o.frequency.value = 1100;
-          g.gain.setValueAtTime(0.4, audioCtx.currentTime + t);
-          g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + t + 0.15);
-          o.start(audioCtx.currentTime + t); o.stop(audioCtx.currentTime + t + 0.15);
-        });
+        updateExerciseNames();
+        updateTimerDisplay();
       }
-    } catch (e) {}
-  }
-
-  function draw() {
-    if (!st) return;
-    const { seconds, phase, workSec, restSec, roundRestSec, currentSet, totalSets, currentRound, totalRounds } = st;
-
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    el('timer-display').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
-
-    const phaseEl = el('timer-phase');
-    const fg = el('timer-ring-fg');
-    let duration = workSec || 1;
-
-    if (phase === 'work') {
-      phaseEl.textContent = 'WERK';
-      phaseEl.className = 'timer-phase';
-      fg.className = 'timer-ring-fg';
-      duration = workSec || 1;
-    } else if (phase === 'rest') {
-      phaseEl.textContent = 'RUST';
-      phaseEl.className = 'timer-phase rest-phase';
-      fg.className = 'timer-ring-fg rest';
-      duration = restSec;
-    } else {
-      phaseEl.textContent = 'RONDE RUST';
-      phaseEl.className = 'timer-phase round-rest-phase';
-      fg.className = 'timer-ring-fg round-rest';
-      duration = roundRestSec;
     }
+  }, 1000);
+}
 
-    fg.style.strokeDashoffset = CIRC * (1 - seconds / duration);
-    el('timer-set-info').textContent = `Set ${currentSet} / ${totalSets}`;
-    el('timer-round-info').textContent = `Ronde ${currentRound} / ${totalRounds}`;
-    
-    // JUISTE INDEX BEPALING VOOR HUIDIGE EN VOLGENDE OEFENING
-    let currentExIdx = (currentSet - 1) % exNames.length;
-    
-    if (phase === 'roundRest') {
-      el('timer-exercise-name').textContent = '— rust —';
-      let nextExIdx = currentSet % exNames.length;
-      el('timer-next-exercise-name').textContent = `Volgende: ${exNames[nextExIdx] || '—'}`;
-    } else if (phase === 'rest') {
-      // In rust staat de klok al op de volgende set, dus currentSet is al opgehoogd
-      el('timer-exercise-name').textContent = exNames[currentExIdx] || '';
-      let nextExIdx = currentSet % exNames.length;
-      let nextExName = (currentSet < totalSets) ? (exNames[nextExIdx] || '—') : 'Laatste set!';
-      el('timer-next-exercise-name').textContent = `Volgende: ${nextExName}`;
-    } else {
-      // In werkfase
-      el('timer-exercise-name').textContent = exNames[currentExIdx] || '';
-      let nextExIdx = currentSet % exNames.length;
-      let nextExName = (currentSet < totalSets) ? (exNames[nextExIdx] || '—') : 'Laatste set!';
-      el('timer-next-exercise-name').textContent = `Volgende: ${nextExName}`;
-    }
-  }
+// Event Listeners voor de knoppen
+document.getElementById('btn-start-workout').addEventListener('click', () => {
+  currentSet = 1;
+  currentRound = 1;
+  currentPhase = "WERK";
+  timeLeft = 45;
+  isPause = false;
+  
+  document.getElementById('modal-timer').style.display = 'flex';
+  document.getElementById('timer-phase').textContent = "WERK";
+  
+  updateExerciseNames();
+  updateTimerDisplay();
+  startTimerLogic();
+});
 
-  function next() {
-    if (!st) return;
-    const perRound = st.totalSets / st.totalRounds;
-    const isLastSetInRound = st.currentSet % perRound === 0;
-    const isLast = st.currentSet === st.totalSets;
+document.getElementById('btn-timer-pause').addEventListener('click', () => {
+  isPause = !isPause;
+  document.getElementById('btn-timer-pause').textContent = isPause ? "START" : "PAUZE";
+});
 
-    if (st.phase === 'work') {
-      if (isLast) {
-        beep('done'); stop();
-        if (st.onComplete) st.onComplete();
-        return;
-      } else if (isLastSetInRound) {
-        st.currentRound++; st.phase = 'roundRest'; st.seconds = st.roundRestSec; beep('rest');
-      } else {
-        st.phase = 'rest'; st.seconds = st.restSec; beep('rest');
-      }
-    } else {
-      st.currentSet++; st.phase = 'work'; st.seconds = st.workSec; beep('work');
-    }
-    draw();
-  }
+document.getElementById('btn-timer-stop').addEventListener('click', () => {
+  clearInterval(timerInterval);
+  document.getElementById('modal-timer').style.display = 'none';
+});
 
-  function skipExercise() {
-    if (!st) return;
-    const perRound = st.totalSets / st.totalRounds;
-    const isLastSetInRound = st.currentSet % perRound === 0;
-    const isLast = st.currentSet === st.totalSets;
-
-    if (isLast) {
-      beep('done'); stop();
-      if (st.onComplete) st.onComplete();
-      return;
-    }
-
-    if (isLastSetInRound) {
-      st.currentRound++; st.phase = 'roundRest'; st.seconds = st.roundRestSec; beep('rest');
-    } else {
-      st.currentSet++; st.phase = 'work'; st.seconds = st.workSec; beep('work');
-    }
-    draw();
-  }
-
-  function start({ totalSets, totalRounds, workSec, restSec, roundRestSec, exercises, onComplete }) {
-    initAudio();
-    exNames = exercises || [];
-    st = { totalSets, totalRounds, workSec, restSec, roundRestSec, phase: 'work', currentSet: 1, currentRound: 1, seconds: workSec || 1, paused: false, onComplete };
-    grabWakeLock();
-    el('modal-timer').style.display = 'flex';
-    draw(); beep('work');
-    if (workSec > 0) { iv = setInterval(tick, 1000); }
-  }
-
-  function tick() {
-    if (!st) return;
-    st.seconds--;
-    
-    if (st.phase !== 'work' && st.seconds <= 5 && st.seconds > 0) {
-      beep('countdown');
-    }
-
-    if (st.seconds <= 0) { next(); } else { draw(); }
-  }
-
-  function pause() {
-    if (!st || st.workSec === 0) return;
-    if (st.paused) {
-      st.paused = false; iv = setInterval(tick, 1000);
-      el('btn-timer-pause').innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
-    } else {
-      st.paused = true; clearInterval(iv); iv = null;
-      el('btn-timer-pause').innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
-    }
-  }
-
-  function stop() {
-    clearInterval(iv); iv = null; st = null; exNames = [];
-    dropWakeLock(); el('modal-timer').style.display = 'none';
-  }
-
-  document.addEventListener('DOMContentLoaded', () => {
-    el('btn-timer-pause').addEventListener('click', pause);
-    el('btn-timer-skip').addEventListener('click', skipExercise);
-    el('btn-timer-stop').addEventListener('click', stop);
-  });
-
-  return { start, stop, pause };
-})();
-
-const RestBanner = (() => {
-  let iv = null;
-  function show(seconds, onDone) {
-    clearInterval(iv);
-    let rem = seconds;
-    const banner = document.getElementById('rest-banner');
-    const timeEl = document.getElementById('rest-time-display');
-    const barEl = document.getElementById('rest-bar');
-    banner.style.display = 'block'; timeEl.textContent = rem; barEl.style.width = '100%';
-    iv = setInterval(() => {
-      rem--; timeEl.textContent = rem; barEl.style.width = `${(rem / seconds) * 100}%`;
-      if (rem <= 0) { hide(); if (onDone) onDone(); }
-    }, 1000);
-    document.getElementById('btn-skip-rest').onclick = () => { hide(); if (onDone) onDone(); };
-  }
-  function hide() { clearInterval(iv); iv = null; document.getElementById('rest-banner').style.display = 'none'; }
-  return { show, hide };
-})();
+document.getElementById('btn-timer-skip').addEventListener('click', () => {
+  timeLeft = 0; // Knal direct naar 0 om de fase-wissel te triggeren
+});
