@@ -30,12 +30,13 @@ const SESSION_TYPES = {
     restSec: 15,
     roundRestSec: 60,
     exercises: [
-      { name: 'KB Goblet Squat', defaultWeight: '24kg' },
-      { name: 'KB Two-Handed Swing', defaultWeight: '32kg' },
+      { name: 'KB Two-Handed Swing', defaultWeight: '20kg' },
+      { name: 'KB Goblet Squat', defaultWeight: '20kg' },
       { name: 'KB Overhead Press (R)', defaultWeight: '16kg' },
       { name: 'KB Overhead Press (L)', defaultWeight: '16kg' },
+      { name: 'Burpees', defaultWeight: 'eigen gew.' },
+      { name: 'KB Deadlifts', defaultWeight: '2x20kg' },
       { name: 'KB Gorilla Row', defaultWeight: '2x20kg' },
-      { name: 'Push-ups', defaultWeight: 'eigen gew.' }
     ],
     finisher: [
       { name: 'Negatieve Pull-ups' },
