@@ -6,10 +6,36 @@ const Timer = (() => {
   let currentSet = 0;
   let currentRound = 1;
   let opts = {};
+  let wakeLock = null;
 
   const CIRCUMFERENCE = 2 * Math.PI * 88; // r=88
 
   function el(id) { return document.getElementById(id); }
+
+  // Wake Lock — voorkomt dat scherm uitgaat
+  async function requestWakeLock() {
+    if ('wakeLock' in navigator) {
+      try {
+        wakeLock = await navigator.wakeLock.request('screen');
+      } catch (e) {
+        // Wake lock niet beschikbaar, stille fail
+      }
+    }
+  }
+
+  async function releaseWakeLock() {
+    if (wakeLock) {
+      try { await wakeLock.release(); } catch (e) {}
+      wakeLock = null;
+    }
+  }
+
+  // Re-request wake lock als pagina weer zichtbaar wordt
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && iv !== null) {
+      requestWakeLock();
+    }
+  });
 
   function setRingProgress(fraction) {
     const fg = el('timer-ring-fg');
@@ -22,7 +48,9 @@ const Timer = (() => {
     el('timer-display').textContent = `${m}:${s < 10 ? '0' : ''}${s}`;
     el('timer-phase').textContent = currentPhase;
 
-    const maxTime = currentPhase === 'WERK' ? opts.workSec : opts.restSec;
+    const maxTime = currentPhase === 'WERK' ? opts.workSec :
+                    currentPhase === 'RONDE RUST' ? opts.roundRestSec :
+                    currentPhase === 'KLAAR' ? 5 : opts.restSec;
     setRingProgress(maxTime > 0 ? timeLeft / maxTime : 1);
 
     const totalSets = opts.totalSets || 1;
@@ -43,6 +71,13 @@ const Timer = (() => {
   }
 
   function advance() {
+    if (currentPhase === 'KLAAR') {
+      // Voorbereiding klaar — start WERK
+      currentPhase = 'WERK';
+      timeLeft = opts.workSec;
+      return;
+    }
+
     if (currentPhase === 'WERK') {
       if (opts.restSec > 0) {
         currentPhase = 'RUST';
@@ -51,7 +86,7 @@ const Timer = (() => {
         nextSet();
       }
     } else {
-      // Check if this was a round-rest (after last exercise of round)
+      // RUST of RONDE RUST — volgende set
       nextSet();
     }
   }
@@ -74,8 +109,9 @@ const Timer = (() => {
       currentPhase = 'RONDE RUST';
       timeLeft = opts.roundRestSec;
     } else {
-      currentPhase = 'WERK';
-      timeLeft = opts.workSec;
+      // 5 sec voorbereiding voor volgende oefening
+      currentPhase = 'KLAAR';
+      timeLeft = 5;
     }
   }
 
@@ -94,9 +130,11 @@ const Timer = (() => {
     currentSet = 1;
     currentRound = 1;
     isPaused = false;
-    currentPhase = opts.workSec > 0 ? 'WERK' : 'RUST';
-    timeLeft = opts.workSec > 0 ? opts.workSec : opts.restSec;
+    // Start met 5 sec voorbereiding
+    currentPhase = 'KLAAR';
+    timeLeft = 5;
 
+    requestWakeLock();
     el('modal-timer').style.display = 'flex';
     render();
     iv = setInterval(tick, 1000);
@@ -105,6 +143,7 @@ const Timer = (() => {
   function stop() {
     if (iv) { clearInterval(iv); iv = null; }
     isPaused = false;
+    releaseWakeLock();
   }
 
   function skip() {

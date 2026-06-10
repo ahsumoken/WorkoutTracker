@@ -181,23 +181,40 @@ const Session = (() => {
 
     const startBlock = document.createElement('div');
     startBlock.className = 'circuit-block';
-    const totalSets = def.exercises.length * def.rounds;
     startBlock.innerHTML = `
       <div class="circuit-start-row">
         <div>
           <div class="circuit-start-label">${def.name}</div>
-          <div class="circuit-sub">${totalSets} sets · ${def.workSec}s werk / ${def.restSec}s rust · ${def.rounds} ronden</div>
+          <div class="circuit-sub">${def.workSec}s werk / ${def.restSec}s rust</div>
         </div>
         <button class="btn-start-timer" id="btn-cir-start">▶ START</button>
+      </div>
+      <div style="padding:12px 14px 4px;display:flex;align-items:center;gap:12px;">
+        <label style="font-size:11px;color:var(--text-3);letter-spacing:1px;text-transform:uppercase;white-space:nowrap;">RONDES</label>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button id="btn-rounds-min" style="width:32px;height:32px;background:var(--bg-3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">−</button>
+          <span id="rounds-display" style="font-size:20px;font-weight:700;color:var(--accent);min-width:24px;text-align:center;">${def.rounds}</span>
+          <button id="btn-rounds-plus" style="width:32px;height:32px;background:var(--bg-3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">+</button>
+        </div>
       </div>`;
+
+    let selectedRounds = def.rounds;
     
+    startBlock.querySelector('#btn-rounds-min').addEventListener('click', () => {
+      if (selectedRounds > 1) { selectedRounds--; startBlock.querySelector('#rounds-display').textContent = selectedRounds; }
+    });
+    startBlock.querySelector('#btn-rounds-plus').addEventListener('click', () => {
+      if (selectedRounds < 10) { selectedRounds++; startBlock.querySelector('#rounds-display').textContent = selectedRounds; }
+    });
+
     startBlock.querySelector('#btn-cir-start').addEventListener('click', () => {
-      timerRunning = true; // Activeer de status pas NA de klik
+      const totalSets = def.exercises.length * selectedRounds;
+      timerRunning = true;
       startClock();
       saveState();
       if (typeof Timer !== 'undefined') {
         Timer.start({
-          totalSets, totalRounds: def.rounds,
+          totalSets, totalRounds: selectedRounds,
           workSec: def.workSec, restSec: def.restSec, roundRestSec: def.roundRestSec || 0,
           exercises: def.exercises.map(e => e.name),
           onComplete: () => showToast('Circuit klaar! 🔥')
