@@ -46,28 +46,42 @@ const Timer = (() => {
     const m = Math.floor(timeLeft / 60);
     const s = timeLeft % 60;
     el('timer-display').textContent = `${m}:${s < 10 ? '0' : ''}${s}`;
-    el('timer-phase').textContent = currentPhase;
+
+    const totalSets = opts.totalSets || 1;
+    const exList = opts.exercises || [];
+    const exIdx = (currentSet - 1) % exList.length;
+    const currentEx = exList[exIdx] || '';
+
+    const nextSetNum = currentSet + 1;
+    const hasNext = nextSetNum <= totalSets;
+    const nextIdx = (nextSetNum - 1) % exList.length;
+    const nextEx = hasNext ? (exList[nextIdx] || '') : '';
+
+    if (currentPhase === 'KLAAR') {
+      el('timer-phase').textContent = '🟡 KLAAR MAKEN';
+      el('timer-exercise-name').textContent = `Aankomend: ${currentEx}`;
+      el('timer-next-exercise-name').textContent = hasNext ? `Daarna: ${nextEx}` : 'Laatste oefening!';
+    } else if (currentPhase === 'WERK') {
+      el('timer-phase').textContent = '🔴 WERK';
+      el('timer-exercise-name').textContent = currentEx;
+      el('timer-next-exercise-name').textContent = opts.restSec > 0 ? '⏸ Rust komt eraan' : (hasNext ? `Volgende: ${nextEx}` : 'Laatste set!');
+    } else if (currentPhase === 'RUST') {
+      el('timer-phase').textContent = '🟢 RUST';
+      el('timer-exercise-name').textContent = `Zojuist: ${currentEx}`;
+      el('timer-next-exercise-name').textContent = hasNext ? `Volgende: ${nextEx}` : 'Laatste set!';
+    } else if (currentPhase === 'RONDE RUST') {
+      el('timer-phase').textContent = '🔵 RONDE RUST';
+      el('timer-exercise-name').textContent = `Ronde ${currentRound - 1} klaar!`;
+      el('timer-next-exercise-name').textContent = hasNext ? `Volgende ronde start met: ${nextEx}` : 'Laatste ronde!';
+    }
 
     const maxTime = currentPhase === 'WERK' ? opts.workSec :
                     currentPhase === 'RONDE RUST' ? opts.roundRestSec :
                     currentPhase === 'KLAAR' ? 5 : opts.restSec;
     setRingProgress(maxTime > 0 ? timeLeft / maxTime : 1);
 
-    const totalSets = opts.totalSets || 1;
     el('timer-set-info').textContent = `Set ${currentSet} / ${totalSets}`;
     el('timer-round-info').textContent = `Ronde ${currentRound} / ${opts.totalRounds || 1}`;
-
-    const exList = opts.exercises || [];
-    const exIdx = (currentSet - 1) % exList.length;
-    el('timer-exercise-name').textContent = exList[exIdx] || '';
-
-    const nextSet = currentPhase === 'WERK' ? currentSet : currentSet + 1;
-    if (nextSet <= totalSets) {
-      const nextIdx = (nextSet - 1) % exList.length;
-      el('timer-next-exercise-name').textContent = `Volgende: ${exList[nextIdx] || ''}`;
-    } else {
-      el('timer-next-exercise-name').textContent = 'Laatste set!';
-    }
   }
 
   function advance() {
