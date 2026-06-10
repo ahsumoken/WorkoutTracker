@@ -69,14 +69,19 @@ const Session = (() => {
     const content = document.getElementById('session-content');
     content.innerHTML = '';
 
-    const resuming = timerRunning; // may be true when called from resume()
+    const resuming = timerRunning;
     if (def.type === 'gym') {
       renderGym(def, content);
       timerRunning = true;
+      document.getElementById('btn-finish').style.visibility = 'visible';
       startClock();
       saveState();
     } else {
-      if (!resuming) timerRunning = false; // only reset if not resuming a saved session
+      if (!resuming) {
+        timerRunning = false;
+        // Verberg KLAAR knop tot timer gestart is
+        document.getElementById('btn-finish').style.visibility = 'hidden';
+      }
       if (def.type === 'circuit') renderCircuit(def, content);
       else if (def.type === 'snacks') renderSnacks(def, content);
     }
@@ -210,6 +215,7 @@ const Session = (() => {
     startBlock.querySelector('#btn-cir-start').addEventListener('click', () => {
       const totalSets = def.exercises.length * selectedRounds;
       timerRunning = true;
+      document.getElementById('btn-finish').style.visibility = 'visible';
       startClock();
       saveState();
       if (typeof Timer !== 'undefined') {

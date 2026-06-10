@@ -144,7 +144,7 @@ const Timer = (() => {
     currentSet = 1;
     currentRound = 1;
     isPaused = false;
-    // Start met 5 sec voorbereiding
+    // Start met 5 sec voorbereiding voor eerste oefening
     currentPhase = 'KLAAR';
     timeLeft = 5;
 
