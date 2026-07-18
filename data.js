@@ -73,19 +73,23 @@ const SESSION_TYPES = {
       { id: 'kb-pullup', name: 'Pull-up / Ring Row', sets: 3, reps: 'AMRAP' }
     ]
   },
-  'kb-complex': {
-    name: 'KB Complex',
+  'kb-flow': {
+    name: 'KB Flow',
     type: 'circuit',
     rounds: 4,
-    workSec: 30,
+    workSec: 40,
     restSec: 0,
     roundRestSec: 90,
     exercises: [
-      { name: 'KB Clean (6x)', defaultWeight: '2x16kg' },
-      { name: 'KB Front Squat (6x)', defaultWeight: '2x16kg' },
-      { name: 'KB Push Press (6x)', defaultWeight: '2x16kg' },
-      { name: 'KB Bent-Over Row (6x)', defaultWeight: '2x16kg' },
-      { name: 'KB Swing (10x)', defaultWeight: '2x16kg' }
+      { name: '1. Curl vanuit hurk (2 KB)', defaultWeight: '2x16kg' },
+      { name: '2. Front Squat', defaultWeight: '2x16kg' },
+      { name: '3. KB Swing', defaultWeight: '2x16kg' },
+      { name: '4. Snatch naar rack', defaultWeight: '2x16kg' },
+      { name: '5. Swing (neergaand)', defaultWeight: '2x16kg' },
+      { name: '6. Deadlift (neergaand)', defaultWeight: '2x16kg' },
+      { name: '7. Gorilla Row', defaultWeight: '2x16kg' },
+      { name: '8. Plank + Push-up', defaultWeight: '2x16kg' },
+      { name: '9. Renegade Row', defaultWeight: '2x16kg' }
     ]
   },
   'alan-a': {
