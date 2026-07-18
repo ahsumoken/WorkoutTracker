@@ -13,8 +13,53 @@ function showToast(msg) {
 }
 
 const App = (() => {
-  function init() { setDate(); refreshHome(); bindHome(); bindSession(); bindHistory(); bindExportModal(); }
+  function init() { setDate(); renderCards(); refreshHome(); bindHome(); bindSession(); bindHistory(); bindExportModal(); }
   function setDate() { document.getElementById('hero-date').textContent = new Date().toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' }); }
+
+  // Bouwt de sessiekaarten dynamisch, gegroepeerd per categorie (modaliteit).
+  // Nieuwe workout toevoegen? Zet hem in SESSION_TYPES + SESSION_CATEGORY +
+  // CARD_META in data.js — hij verschijnt hier automatisch onder de juiste kop.
+  function renderCards() {
+    const container = document.getElementById('session-cards');
+    if (!container) return;
+    // groepeer sessietypes op categorie, in vaste volgorde
+    const order = ['kracht', 'conditie', 'flow', 'snack'];
+    const groups = {};
+    Object.keys(SESSION_TYPES).forEach(type => {
+      const cat = (typeof SESSION_CATEGORY !== 'undefined' && SESSION_CATEGORY[type]) || 'conditie';
+      (groups[cat] = groups[cat] || []).push(type);
+    });
+    let html = '';
+    order.forEach(cat => {
+      if (!groups[cat] || !groups[cat].length) return;
+      const catInfo = (typeof CATEGORY_LABELS !== 'undefined' && CATEGORY_LABELS[cat]) || { label: cat.toUpperCase(), color: 'var(--text-3)' };
+      html += `<div class="cat-header" style="border-left:3px solid ${catInfo.color}"><span>${catInfo.label}</span></div>`;
+      groups[cat].forEach(type => {
+        const m = (typeof CARD_META !== 'undefined' && CARD_META[type]) || { accent: 'var(--accent-orange)', tag: '', name: type, sub: '', sets: '' };
+        // patroon-chips: verzamel unieke patronen over alle oefeningen van deze sessie
+        let chips = '';
+        const def = SESSION_TYPES[type];
+        if (def && def.exercises && typeof getPatterns === 'function') {
+          const pats = new Set();
+          def.exercises.forEach(ex => getPatterns(ex.name).forEach(p => pats.add(p)));
+          chips = [...pats].map(p => {
+            const info = (typeof MOVEMENT_PATTERNS !== 'undefined' && MOVEMENT_PATTERNS[p]) || { label: p, color: '#888' };
+            return `<span class="pat-chip" style="background:${info.color}22;color:${info.color};border:1px solid ${info.color}55">${info.label}</span>`;
+          }).join('');
+        }
+        html += `<button class="session-card" data-type="${type}">
+          <div class="session-card-accent" style="background:${m.accent};"></div>
+          <div class="session-tag">${m.tag}</div>
+          <div class="session-name">${m.name}</div>
+          <div class="session-sub">${m.sub}</div>
+          <div class="session-sets">${m.sets}</div>
+          ${chips ? `<div class="pat-chips">${chips}</div>` : ''}
+        </button>`;
+      });
+    });
+    html += `<div style="height:100px"></div>`;
+    container.innerHTML = html;
+  }
 
   function refreshHome() {
     const all = DB.getAll();

@@ -92,6 +92,58 @@ const SESSION_TYPES = {
       { name: '9. Renegade Row', defaultWeight: '2x16kg' }
     ]
   },
+  'kb-flow-terra': {
+    name: 'KB Flow TERRAFLOW',
+    type: 'circuit',
+    rounds: 4,
+    workSec: 40,
+    restSec: 0,
+    roundRestSec: 90,
+    flowSingle: true,
+    exercises: [
+      { name: '1. Swingclean', defaultWeight: '16kg' },
+      { name: '2. Lateral Clean', defaultWeight: '16kg' },
+      { name: '3. Single-arm Hip Hinge Swing', defaultWeight: '16kg' },
+      { name: '4. Bottoms-up Horn Grip Clean', defaultWeight: '16kg' },
+      { name: '5. Slasher', defaultWeight: '16kg' }
+    ]
+  },
+  'kb-flow-spezia': {
+    name: 'KB Flow La Spezia',
+    type: 'circuit',
+    rounds: 4,
+    workSec: 40,
+    restSec: 0,
+    roundRestSec: 90,
+    flowSingle: true,
+    exercises: [
+      { name: '1. Squat', defaultWeight: '16kg' },
+      { name: '2. Dead Curl', defaultWeight: '16kg' },
+      { name: '3. Stand Up', defaultWeight: '16kg' },
+      { name: '4. Lateral Clean', defaultWeight: '16kg' },
+      { name: '5. Lateral Snatch', defaultWeight: '16kg' },
+      { name: '6. Circular Clean', defaultWeight: '16kg' },
+      { name: '7. Return to Dead', defaultWeight: '16kg' }
+    ]
+  },
+  'horse-legs': {
+    name: 'Muay Thai Horse Legs',
+    type: 'circuit',
+    rounds: 3,
+    workSec: 0,
+    restSec: 20,
+    roundRestSec: 150,
+    repsBased: true,
+    exercises: [
+      { name: 'Lunges met kniestoten (20x, 10 p/kant)', defaultWeight: 'eigen gew.' },
+      { name: 'Reguliere Squats (50x)', defaultWeight: 'eigen gew.' },
+      { name: 'Kneeling Sissy Squats (10x)', defaultWeight: 'eigen gew.' },
+      { name: 'Knie-naar-sprong / Kneeling Jump (10x)', defaultWeight: 'eigen gew.' },
+      { name: 'Wisselsprongen / Jumping Lunges (20x, 10 p/kant)', defaultWeight: 'eigen gew.' },
+      { name: 'Squats met sprong / Jump Squats (20x)', defaultWeight: 'eigen gew.' },
+      { name: 'Kuitheffen / Calf Raises (20x)', defaultWeight: 'eigen gew.' }
+    ]
+  },
   'alan-a': {
     name: 'Alan Hanik A',
     type: 'circuit',
@@ -182,6 +234,150 @@ const SESSION_TYPES = {
     ]
   }
 };
+
+/* ============================================================
+   BEWEGINGSPATROON-CLASSIFICATIE
+   Gebaseerd op de 7-patronen-standaard (StrongFirst / functional
+   fitness): hinge, squat, lunge, push, pull, carry, rotation,
+   anti-rotation, + locomotion (hardlopen/wandelen).
+
+   ONDERHOUD: nieuwe oefening toevoegen? Meestal hoef je niets te
+   doen — de trefwoord-map hieronder herkent 'swing', 'squat',
+   'press' etc. automatisch. Alleen samengestelde bewegingen
+   (clean & press, thruster, burpee) staan in PATTERN_OVERRIDES.
+   ============================================================ */
+
+const MOVEMENT_PATTERNS = {
+  hinge:        { label: 'Hinge',         color: '#f97316' },
+  squat:        { label: 'Squat',         color: '#06b6d4' },
+  lunge:        { label: 'Lunge',         color: '#22c55e' },
+  push:         { label: 'Push',          color: '#a855f7' },
+  pull:         { label: 'Pull',          color: '#3b82f6' },
+  carry:        { label: 'Carry',         color: '#eab308' },
+  rotation:     { label: 'Rotatie',       color: '#ec4899' },
+  'anti-rotation': { label: 'Anti-rotatie', color: '#f43f5e' },
+  locomotion:   { label: 'Locomotie',     color: '#14b8a6' },
+  core:         { label: 'Core',          color: '#64748b' }
+};
+
+// Sessie -> modaliteit (hoofdcategorie)
+const SESSION_CATEGORY = {
+  'compounds-a': 'kracht', 'compounds-b': 'kracht', 'kb-kracht': 'kracht',
+  'kettlebell': 'conditie', 'kettlebell-b': 'conditie',
+  'alan-a': 'conditie', 'alan-b': 'conditie',
+  'kb-flow': 'flow', 'kb-flow-terra': 'flow', 'kb-flow-spezia': 'flow',
+  'horse-legs': 'conditie',
+  'spartan-50': 'conditie', 'bodyweight-murph': 'conditie',
+  'kb-rope-amrap': 'conditie', 'ring-quest': 'kracht',
+  'snacks': 'snack'
+};
+
+const CATEGORY_LABELS = {
+  kracht:   { label: 'KRACHT',   color: '#a855f7' },
+  conditie: { label: 'CONDITIE', color: '#f97316' },
+  flow:     { label: 'FLOW',     color: '#06b6d4' },
+  snack:    { label: 'SNACKS',   color: '#eab308' }
+};
+
+const CARD_META = {
+  'compounds-a': { accent: "var(--accent-blue)", tag: "GYM A", name: "Compounds A", sub: "Squat · Deadlift · Bench · Row · OHP", sets: "6 oefeningen · ~60 min" },
+  'compounds-b': { accent: "var(--accent-cyan)", tag: "GYM B", name: "Compounds B", sub: "RDL · Incline · Pull-up · Press", sets: "7 oefeningen · ~65 min" },
+  'kettlebell': { accent: "var(--accent-orange)", tag: "CIRCUIT A", name: "Kettlebell Circuit A", sub: "18 sets · 0:45/0:15 · 3 ronden", sets: "6 oefeningen + finisher" },
+  'kettlebell-b': { accent: "var(--accent-orange)", tag: "CIRCUIT B", name: "Kettlebell Circuit B", sub: "Sumo · Split Squat · Push Press · Thrusters", sets: "24 sets · 0:45/0:15 · 3 ronden" },
+  'kb-kracht': { accent: "var(--accent-red)", tag: "KB KRACHT", name: "KB Kracht", sub: "Front Squat · RDL · Press · Row · zwaar/laag", sets: "6 oefeningen · log kg & reps" },
+  'kb-flow': { accent: "var(--accent-orange)", tag: "FLOW", name: "KB Flow", sub: "Curl → Squat → Swing → Snatch → Row → Plank", sets: "9 bewegingen · 1 doorlopende keten · 4 ronden" },
+  'kb-flow-terra': { accent: "var(--accent-orange)", tag: "FLOW · TERRA", name: "TERRAFLOW", sub: "Swingclean → Lateral Clean → Slasher", sets: "5 bewegingen · enkele KB · Cavemantraining" },
+  'kb-flow-spezia': { accent: "var(--accent-orange)", tag: "FLOW · SPEZIA", name: "La Spezia Flow", sub: "Squat → Dead Curl → Snatch → Return", sets: "7 bewegingen · enkele KB · Cavemantraining" },
+  'horse-legs': { accent: "var(--accent-red)", tag: "MUAY THAI", name: "Horse Legs", sub: "Lunges · Squats · Jumps · Calf Raises", sets: "7 oefeningen · reps · 3 ronden" },
+  'alan-a': { accent: "var(--accent-purple)", tag: "ALAN A", name: "Alan Hanik A", sub: "Step-up · RDL · Squat · Push-up", sets: "18 sets · 0:45/0:15 · 3 ronden" },
+  'alan-b': { accent: "var(--accent-green)", tag: "ALAN B", name: "Alan Hanik B", sub: "Lunge · Swing · Ring Row · Split Squat", sets: "18 sets · 0:45/0:15 · 3 ronden" },
+  'spartan-50': { accent: "var(--accent-red)", tag: "SPARTAN 50", name: "The Spartan 50", sub: "Burpees (3 Push-ups) + 3 Jump Squats", sets: "1 set · Gewichtsvest" },
+  'bodyweight-murph': { accent: "var(--accent-indigo)", tag: "MURPH", name: "Bodyweight Murph Variant", sub: "Negatieve Pull-ups · Dips · Air Squats", sets: "30 sets · 10 ronden · Met Vest" },
+  'kb-rope-amrap': { accent: "var(--accent-rose)", tag: "AMRAP", name: "KB & Springtouw AMRAP", sub: "Double Unders · Cleans · Front Squats · Presses", sets: "20 minuten · Maximaal resultaat" },
+  'ring-quest': { accent: "var(--accent-sky)", tag: "RING QUEST", name: "The Ring Quest", sub: "Ring Rows · Assisted Pull-ups · Support Holds", sets: "5 oefeningen · Kracht & Controle" },
+  'snacks': { accent: "var(--accent-yellow)", tag: "SNACK", name: "Kettlebell Snacks", sub: "5 mini-workouts · 5-10 min", sets: "Power · Upper · Lower · Core · Full Body" },
+};
+
+// Expliciete overrides voor samengestelde/dubbelzinnige bewegingen.
+// Sleutel = kleine-letter substring die in de oefeningnaam voorkomt.
+const PATTERN_OVERRIDES = [
+  { match: 'clean & thruster', patterns: ['hinge','squat','push'] },
+  { match: 'clean & press',    patterns: ['hinge','push'] },
+  { match: 'thruster',         patterns: ['squat','push'] },
+  { match: 'curl',             patterns: ['hinge','pull'] },       // curl vanuit hurk / dead curl
+  { match: 'burpee',           patterns: ['squat','push','locomotion'] },
+  { match: 'renegade row',     patterns: ['pull','anti-rotation'] },
+  { match: 'gorilla row',      patterns: ['hinge','pull'] },
+  { match: 'plank + push-up',  patterns: ['push','anti-rotation','core'] },
+  { match: 'hand-to-hand',     patterns: ['hinge','anti-rotation'] },
+  { match: 'single-arm',       patterns: ['hinge','anti-rotation'] },
+  { match: 'slasher',          patterns: ['rotation','hinge'] },
+  { match: 'halo',             patterns: ['rotation','core'] },
+  { match: 'windmill',         patterns: ['rotation','core'] },
+  { match: 'snatch',           patterns: ['hinge','push'] },
+  { match: 'step-up',          patterns: ['lunge'] },
+  { match: 'sumo deadlift',    patterns: ['hinge','squat'] },
+  { match: 'sissy squat',      patterns: ['squat'] },
+  { match: 'kneeling jump',    patterns: ['squat','locomotion'] },
+  { match: 'knie-naar-sprong', patterns: ['squat','locomotion'] },
+  { match: 'jump squat',       patterns: ['squat','locomotion'] },
+  { match: 'jumping lunge',    patterns: ['lunge','locomotion'] },
+  { match: 'wisselsprongen',   patterns: ['lunge','locomotion'] },
+  { match: 'kniestoten',       patterns: ['lunge','core'] },
+  { match: 'ab wheel',         patterns: ['core','anti-rotation'] },
+  { match: 'hanging leg raise', patterns: ['core'] },
+  { match: 'plank',            patterns: ['core','anti-rotation'] },
+  { match: 'support hold',     patterns: ['push','core'] }
+];
+
+// Trefwoord -> patroon (fallback als geen override matcht).
+const PATTERN_KEYWORDS = [
+  { kw: 'swing',        p: ['hinge'] },
+  { kw: 'clean',        p: ['hinge'] },
+  { kw: 'deadlift',     p: ['hinge'] },
+  { kw: 'romanian',     p: ['hinge'] },
+  { kw: 'rdl',          p: ['hinge'] },
+  { kw: 'hip hinge',    p: ['hinge'] },
+  { kw: 'goblet squat', p: ['squat'] },
+  { kw: 'front squat',  p: ['squat'] },
+  { kw: 'split squat',  p: ['lunge'] },
+  { kw: 'airborne',     p: ['lunge'] },
+  { kw: 'squat',        p: ['squat'] },
+  { kw: 'air squat',    p: ['squat'] },
+  { kw: 'lunge',        p: ['lunge'] },
+  { kw: 'press',        p: ['push'] },
+  { kw: 'push press',   p: ['push'] },
+  { kw: 'bench',        p: ['push'] },
+  { kw: 'push-up',      p: ['push'] },
+  { kw: 'push up',      p: ['push'] },
+  { kw: 'dip',          p: ['push'] },
+  { kw: 'lateral raise', p: ['push'] },
+  { kw: 'triceps',      p: ['push'] },
+  { kw: 'row',          p: ['pull'] },
+  { kw: 'pull-up',      p: ['pull'] },
+  { kw: 'pull up',      p: ['pull'] },
+  { kw: 'pullup',       p: ['pull'] },
+  { kw: 'pulldown',     p: ['pull'] },
+  { kw: 'carry',        p: ['carry'] },
+  { kw: 'waiter',       p: ['carry'] },
+  { kw: 'farmer',       p: ['carry'] },
+  { kw: 'calf',         p: ['locomotion'] },
+  { kw: 'kuitheffen',   p: ['locomotion'] },
+  { kw: 'run',          p: ['locomotion'] },
+  { kw: 'double under',  p: ['locomotion'] }
+];
+
+// Bepaal patronen voor een oefeningnaam.
+function getPatterns(name) {
+  if (!name) return [];
+  const n = name.toLowerCase();
+  const found = new Set();
+  // 1) overrides eerst (samengestelde bewegingen)
+  PATTERN_OVERRIDES.forEach(o => { if (n.includes(o.match)) o.patterns.forEach(p => found.add(p)); });
+  // 2) trefwoorden (vullen aan, dubbele worden door de Set genegeerd)
+  PATTERN_KEYWORDS.forEach(k => { if (n.includes(k.kw)) k.p.forEach(p => found.add(p)); });
+  return [...found];
+}
 
 const DB = (() => {
   const KEY = 'trainlog_workout_history';

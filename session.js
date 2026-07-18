@@ -190,9 +190,9 @@ const Session = (() => {
       <div class="circuit-start-row">
         <div>
           <div class="circuit-start-label">${def.name}</div>
-          <div class="circuit-sub">${def.workSec}s werk / ${def.restSec}s rust</div>
+          <div class="circuit-sub">${def.name === 'Muay Thai Horse Legs' ? 'Reps-circuit · tel zelf · 20-30s rust tussen oefeningen' : def.workSec + 's werk / ' + def.restSec + 's rust'}</div>
         </div>
-        <button class="btn-start-timer" id="btn-cir-start">▶ START</button>
+        <button class="btn-start-timer" id="btn-cir-start"${def.name === 'Muay Thai Horse Legs' ? ' style="display:none"' : ''}>▶ START</button>
       </div>
       <div style="padding:12px 14px 4px;display:flex;align-items:center;gap:12px;">
         <label style="font-size:11px;color:var(--text-3);letter-spacing:1px;text-transform:uppercase;white-space:nowrap;">RONDES</label>
@@ -230,15 +230,53 @@ const Session = (() => {
 
     const exBlock = document.createElement('div');
     exBlock.className = 'circuit-block';
-    let exHtml = `<div style="padding:12px 14px;border-bottom:1px solid var(--border)"><div class="section-title">OEFENINGEN</div></div><div class="circuit-exercises">`;
-    def.exercises.forEach((ex, i) => {
-      exHtml += `<div class="circuit-ex-row">
-        <div class="circuit-ex-num">${i+1}</div>
-        <div class="circuit-ex-name">${ex.name}</div>
-        <div class="circuit-ex-weight">${ex.defaultWeight || 'eigen gew.'}</div>
+    let exHtml;
+
+    if (def.name.startsWith('KB Flow')) {
+      // Speciale weergave: toon als één doorlopende keten i.p.v. losse oefeningen
+      const flowWeight = def.exercises[0]?.defaultWeight || 'eigen gew.';
+      exHtml = `<div style="padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <div class="section-title">DE FLOW · ÉÉN DOORLOPENDE KETEN</div>
+        <div class="flow-weight-badge">${flowWeight}</div>
       </div>`;
-    });
-    exHtml += `</div>`;
+      exHtml += `<div class="flow-chain">`;
+      def.exercises.forEach((ex, i) => {
+        const isLast = i === def.exercises.length - 1;
+        exHtml += `<div class="flow-node">
+          <div class="flow-badge">${i+1}</div>
+          <div class="flow-node-body">
+            <div class="flow-node-name">${ex.name.replace(/^\d+\.\s*/, '')}</div>
+          </div>
+        </div>`;
+        if (!isLast) {
+          exHtml += `<div class="flow-connector"><span class="flow-arrow">↓</span></div>`;
+        }
+      });
+      // Ronde-terugloop indicator
+      exHtml += `<div class="flow-loopback"><span class="flow-loop-icon">↻</span> Terug naar begin — herhaal de keten</div>`;
+      exHtml += `</div>`;
+    } else if (def.name === 'Muay Thai Horse Legs') {
+      // Reps-gebaseerd circuit: toon reps-lijst, geen tijd-timer
+      exHtml = `<div style="padding:12px 14px;border-bottom:1px solid var(--border)"><div class="section-title">CIRCUIT · ${def.rounds} RONDES · TEL ZELF JE REPS</div></div><div class="circuit-exercises">`;
+      def.exercises.forEach((ex, i) => {
+        exHtml += `<div class="circuit-ex-row">
+          <div class="circuit-ex-num">${i+1}</div>
+          <div class="circuit-ex-name">${ex.name}</div>
+        </div>`;
+      });
+      exHtml += `</div>`;
+      exHtml += `<div class="reps-hint">⚠️ Knie-intensief. Warm goed op. Land zacht op de bal van je voet. Schaal 50 squats naar 30 als startpunt. Rust 20-30s tussen oefeningen, 2-3 min na elke ronde.</div>`;
+    } else {
+      exHtml = `<div style="padding:12px 14px;border-bottom:1px solid var(--border)"><div class="section-title">OEFENINGEN</div></div><div class="circuit-exercises">`;
+      def.exercises.forEach((ex, i) => {
+        exHtml += `<div class="circuit-ex-row">
+          <div class="circuit-ex-num">${i+1}</div>
+          <div class="circuit-ex-name">${ex.name}</div>
+          <div class="circuit-ex-weight">${ex.defaultWeight || 'eigen gew.'}</div>
+        </div>`;
+      });
+      exHtml += `</div>`;
+    }
 
     const prevBadge = prev?.rounds ? ` <span style="font-size:11px;color:var(--text-3)">Vorige: ${prev.rounds}</span>` : '';
     
