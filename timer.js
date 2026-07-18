@@ -2,6 +2,7 @@ const Timer = (() => {
   let iv = null;
   let isPaused = false;
   let timeLeft = 0;
+  let phaseEndsAt = 0; // absoluut tijdstip (ms) waarop de huidige fase eindigt
   let currentPhase = 'WERK';
   let currentSet = 0;
   let currentRound = 1;
@@ -11,6 +12,13 @@ const Timer = (() => {
   const CIRCUMFERENCE = 2 * Math.PI * 88; // r=88
 
   function el(id) { return document.getElementById(id); }
+
+  // Zet de tijd voor de huidige fase én het absolute eindtijdstip.
+  // Zo blijft de timer correct ook als ticks gemist worden (scherm uit, tab-sluimer).
+  function setPhaseTime(seconds) {
+    timeLeft = seconds;
+    phaseEndsAt = Date.now() + seconds * 1000;
+  }
 
   // Wake Lock — voorkomt dat scherm uitgaat
   async function requestWakeLock() {
@@ -88,19 +96,25 @@ const Timer = (() => {
     if (currentPhase === 'KLAAR') {
       // Voorbereiding klaar — start WERK
       currentPhase = 'WERK';
-      timeLeft = opts.workSec;
+      setPhaseTime(opts.workSec);
       return;
     }
 
     if (currentPhase === 'WERK') {
       if (opts.restSec > 0) {
         currentPhase = 'RUST';
-        timeLeft = opts.restSec;
+        setPhaseTime(opts.restSec);
       } else {
         nextSet();
       }
+    } else if (currentPhase === 'RONDE RUST') {
+      // Ronde-rust is voorbij: begin de al-ingestelde set (eerste oefening van
+      // de nieuwe ronde) met een korte voorbereiding. NIET opnieuw nextSet(),
+      // anders wordt de eerste oefening van elke ronde overgeslagen.
+      currentPhase = 'KLAAR';
+      setPhaseTime(5);
     } else {
-      // RUST of RONDE RUST — volgende set
+      // Gewone RUST — door naar de volgende set
       nextSet();
     }
   }
@@ -121,19 +135,30 @@ const Timer = (() => {
     const justFinishedRound = currentSet > 1 && ((currentSet - 1) % perRound === 0);
     if (justFinishedRound && opts.roundRestSec > 0) {
       currentPhase = 'RONDE RUST';
-      timeLeft = opts.roundRestSec;
+      setPhaseTime(opts.roundRestSec);
     } else {
       // 5 sec voorbereiding voor volgende oefening
       currentPhase = 'KLAAR';
-      timeLeft = 5;
+      setPhaseTime(5);
     }
   }
 
   function tick() {
     if (isPaused) return;
-    timeLeft--;
-    if (timeLeft <= 0) {
+    // Bereken resterende tijd uit het absolute eindtijdstip.
+    // Als er ticks gemist zijn (scherm uit, tab-sluimer) kan er meer dan één
+    // fase verstreken zijn. We lopen dóór alle verstreken fases heen, zodat
+    // er nooit een oefening/fase wordt overgeslagen — ook niet bij grote sprongen.
+    let guard = 0;
+    while (true) {
+      timeLeft = Math.round((phaseEndsAt - Date.now()) / 1000);
+      if (timeLeft > 0) break;
+      timeLeft = 0;
       advance();
+      // advance() zet een nieuw phaseEndsAt in de toekomst; als de gemiste tijd
+      // ook die fase al overschrijdt, herhaalt de lus tot we bij 'nu' zijn.
+      if (iv === null) break; // timer is klaar/gestopt (nextSet riep stop() aan)
+      if (++guard > 200) break; // veiligheidsrem tegen oneindige lus
     }
     render();
   }
@@ -146,7 +171,7 @@ const Timer = (() => {
     isPaused = false;
     // Start met 5 sec voorbereiding voor eerste oefening
     currentPhase = 'KLAAR';
-    timeLeft = 5;
+    setPhaseTime(5);
 
     requestWakeLock();
     el('modal-timer').style.display = 'flex';
@@ -162,6 +187,7 @@ const Timer = (() => {
 
   function skip() {
     timeLeft = 0;
+    phaseEndsAt = Date.now();
     advance();
     render();
   }
@@ -170,6 +196,11 @@ const Timer = (() => {
   document.addEventListener('DOMContentLoaded', () => {
     el('btn-timer-pause').addEventListener('click', () => {
       isPaused = !isPaused;
+      // Bij hervatten: schuif het eindtijdstip vooruit met de resterende tijd,
+      // zodat de pauze niet meetelt in de aftelling.
+      if (!isPaused) {
+        phaseEndsAt = Date.now() + timeLeft * 1000;
+      }
       const svg_pause = `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`;
       const svg_play  = `<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
       el('btn-timer-pause').innerHTML = isPaused ? svg_play : svg_pause;

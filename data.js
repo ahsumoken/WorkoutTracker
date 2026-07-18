@@ -51,14 +51,41 @@ const SESSION_TYPES = {
     restSec: 15,
     roundRestSec: 60,
     exercises: [
-      { name: 'KB Sumo Deadlift', defaultWeight: '32kg' },
+      { name: 'KB Sumo Deadlift', defaultWeight: '2x20kg' },
       { name: 'KB Bulgarian Split Squat (R)', defaultWeight: '16kg' },
       { name: 'KB Bulgarian Split Squat (L)', defaultWeight: '16kg' },
       { name: 'KB Push Press (R)', defaultWeight: '20kg' },
       { name: 'KB Push Press (L)', defaultWeight: '20kg' },
-      { name: 'KB Hand-to-Hand Swing', defaultWeight: '24kg' },
+      { name: 'KB Hand-to-Hand Swing', defaultWeight: '20kg' },
       { name: 'KB Clean & Thruster (R)', defaultWeight: '16kg' },
       { name: 'KB Clean & Thruster (L)', defaultWeight: '16kg' }
+    ]
+  },
+  'kb-kracht': {
+    name: 'KB Kracht',
+    type: 'gym',
+    exercises: [
+      { id: 'kb-frontsquat', name: 'KB Front Squat (2 KB)', sets: 4, reps: '6-8' },
+      { id: 'kb-rdl', name: 'KB Romanian Deadlift (2 KB)', sets: 4, reps: '6-8' },
+      { id: 'kb-press', name: 'KB Strict Press (2 KB)', sets: 4, reps: '6-8' },
+      { id: 'kb-row', name: 'KB Bent-Over Row (2 KB)', sets: 4, reps: '8-10' },
+      { id: 'kb-gobletsquat', name: 'KB Goblet Squat (zwaar)', sets: 3, reps: '8-10' },
+      { id: 'kb-pullup', name: 'Pull-up / Ring Row', sets: 3, reps: 'AMRAP' }
+    ]
+  },
+  'kb-complex': {
+    name: 'KB Complex',
+    type: 'circuit',
+    rounds: 4,
+    workSec: 30,
+    restSec: 0,
+    roundRestSec: 90,
+    exercises: [
+      { name: 'KB Clean (6x)', defaultWeight: '2x16kg' },
+      { name: 'KB Front Squat (6x)', defaultWeight: '2x16kg' },
+      { name: 'KB Push Press (6x)', defaultWeight: '2x16kg' },
+      { name: 'KB Bent-Over Row (6x)', defaultWeight: '2x16kg' },
+      { name: 'KB Swing (10x)', defaultWeight: '2x16kg' }
     ]
   },
   'alan-a': {
@@ -71,7 +98,7 @@ const SESSION_TYPES = {
     exercises: [
       { name: 'Deficit KB Step-up (R)', defaultWeight: '2x16kg' },
       { name: 'Deficit KB Step-up (L)', defaultWeight: '2x16kg' },
-      { name: 'KB Romanian Deadlift', defaultWeight: '2x24kg' },
+      { name: 'KB Romanian Deadlift', defaultWeight: '2x20kg' },
       { name: 'KB Front Squat', defaultWeight: '2x20kg' },
       { name: 'Feet-Elevated Push-up', defaultWeight: 'eigen gew.' },
       { name: 'Inverted Ring Row', defaultWeight: 'eigen gew.' }
@@ -87,7 +114,7 @@ const SESSION_TYPES = {
     exercises: [
       { name: 'KB Walking Lunge', defaultWeight: '2x16kg' },
       { name: 'KB Cleans', defaultWeight: '2x20kg' },
-      { name: 'Heavy KB Swing', defaultWeight: '40kg' },
+      { name: 'Heavy KB Swing', defaultWeight: '20kg' },
       { name: 'Ring Dip (Assisted)', defaultWeight: 'eigen gew.' },
       { name: 'KB Airborne Split Squat (R)', defaultWeight: '12kg' },
       { name: 'KB Airborne Split Squat (L)', defaultWeight: '12kg' }
@@ -122,7 +149,7 @@ const SESSION_TYPES = {
     workSec: 1200,
     restSec: 0,
     exercises: [
-      { name: 'Double Unders / Cleans / Front Squats / Presses', defaultWeight: '24kg' }
+      { name: 'Double Unders / Cleans / Front Squats / Presses', defaultWeight: '20kg' }
     ]
   },
   'ring-quest': {
