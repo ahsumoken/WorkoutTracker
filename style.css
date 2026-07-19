@@ -295,3 +295,63 @@ body { min-height: 100dvh; overflow-x: hidden; }
   border-radius: 999px;
   text-transform: uppercase;
 }
+
+/* ===== Voeding-scherm ===== */
+.nutrition-nav { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; gap:12px; }
+.meal-nav-btn { width:40px; height:40px; border-radius:50%; background:var(--bg-3); border:1px solid var(--border); color:var(--text); font-size:22px; font-weight:700; flex-shrink:0; }
+.meal-day-label { flex:1; text-align:center; font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:15px; letter-spacing:.03em; color:var(--text); text-transform:capitalize; }
+.meal-total-card { margin:4px 16px 16px; padding:14px 16px; background:linear-gradient(135deg, rgba(168,85,247,0.12), rgba(6,182,212,0.08)); border:1px solid var(--border-bright); border-radius:var(--radius); }
+.meal-total-title { font-family:'Barlow Condensed',sans-serif; font-size:11px; font-weight:700; letter-spacing:.14em; color:var(--text-3); margin-bottom:10px; }
+.meal-total-macros { display:flex; justify-content:space-between; }
+.mt-macro { display:flex; flex-direction:column; align-items:center; gap:2px; }
+.mt-val { font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:22px; color:var(--text); }
+.mt-lbl { font-size:10px; color:var(--text-3); letter-spacing:.06em; text-transform:uppercase; }
+.meal-card { margin:0 16px 10px; padding:12px 14px; background:var(--bg-2); border:1px solid var(--border); border-radius:var(--radius); }
+.meal-card-head { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+.meal-icon { font-size:15px; }
+.meal-moment { font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:12px; letter-spacing:.12em; color:var(--text-3); flex:1; }
+.meal-fat { font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:12px; color:var(--accent-green); }
+.meal-fat.over { color:var(--accent-red); }
+.meal-name { font-size:14px; color:var(--text); line-height:1.4; margin-bottom:8px; }
+.meal-macros { display:flex; gap:8px; flex-wrap:wrap; }
+.mm { font-family:'Barlow Condensed',sans-serif; font-size:11px; font-weight:600; padding:2px 8px; border-radius:999px; background:var(--bg-3); color:var(--text-2); }
+.mm.p { color:var(--accent-purple); }
+.mm.c { color:var(--accent-cyan); }
+.meal-disclaimer { margin:16px; padding:10px 14px; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:var(--radius-sm); font-size:11px; color:var(--text-3); line-height:1.5; }
+
+/* ===== Eiwitboost in maaltijd ===== */
+.meal-boost {
+  margin: 6px 0 8px;
+  padding: 6px 10px;
+  background: rgba(168,85,247,0.12);
+  border: 1px solid rgba(168,85,247,0.35);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-purple);
+  line-height: 1.4;
+}
+
+/* ===== Database ===== */
+.fooddb-open-btn {
+  width: 100%;
+  padding: 10px;
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-2);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: .04em;
+}
+.fooddb-list { padding: 8px 16px; }
+.fooddb-hint { font-size: 11px; color: var(--text-3); margin-bottom: 12px; line-height: 1.5; }
+.fooddb-row { padding: 10px 0; border-bottom: 1px solid var(--border); }
+.fooddb-name { font-size: 14px; color: var(--text); font-weight: 500; }
+.fooddb-amount { font-size: 11px; color: var(--text-3); margin: 2px 0 6px; }
+.fooddb-macros { display: flex; flex-wrap: wrap; gap: 6px; }
+.fdm { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 999px; background: var(--bg-3); color: var(--text-2); }
+.fdm.p { color: var(--accent-purple); }
+.fdm.c { color: var(--accent-cyan); }
+.fdm.f { color: var(--accent-orange); }

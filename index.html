@@ -22,6 +22,9 @@
           <span class="logo-text">TRAINLOG</span>
         </div>
         <div class="header-actions">
+          <button id="btn-nutrition" class="icon-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+          </button>
           <button id="btn-history" class="icon-btn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="12 8 12 12 14 14"/><path d="M3.05 11a9 9 0 1 1 .5 4"/><polyline points="3 16 3.05 11 8 11"/></svg>
           </button>
@@ -52,6 +55,36 @@
         <div id="session-cards"></div>
         <div style="height:100px"></div>
       </div>
+    </div>
+
+    <div id="screen-nutrition" class="screen">
+      <div class="session-header">
+        <button class="back-btn" id="btn-back-nutrition">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="session-title-wrap">
+          <div class="session-title">VOEDING</div>
+        </div>
+      </div>
+      <div class="nutrition-nav">
+        <button id="btn-meal-prev" class="meal-nav-btn">‹</button>
+        <div id="meal-day-label" class="meal-day-label">Vandaag</div>
+        <button id="btn-meal-next" class="meal-nav-btn">›</button>
+      </div>
+      <div style="padding:0 16px 8px"><button id="btn-open-fooddb" class="fooddb-open-btn">📋 Bekijk voedseldatabase</button></div>
+      <div id="nutrition-content"></div>
+    </div>
+
+    <div id="screen-fooddb" class="screen">
+      <div class="session-header">
+        <button class="back-btn" id="btn-back-fooddb">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="session-title-wrap">
+          <div class="session-title">VOEDSELDATABASE</div>
+        </div>
+      </div>
+      <div id="fooddb-content"></div>
     </div>
 
     <div id="screen-session" class="screen">
@@ -144,6 +177,8 @@
   </div>
 
   <script src="data.js"></script>
+  <script src="meals.js"></script>
+  <script src="fooddb.js"></script>
   <script src="timer.js"></script>
   <script src="session.js"></script>
   <script src="app.js"></script>

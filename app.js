@@ -13,7 +13,92 @@ function showToast(msg) {
 }
 
 const App = (() => {
-  function init() { setDate(); renderCards(); refreshHome(); bindHome(); bindSession(); bindHistory(); bindExportModal(); }
+  // ===== Voeding =====
+  let mealOffset = 0; // 0 = vandaag, -1 = gisteren, +1 = morgen
+  const MEAL_START = new Date(2026, 0, 1); // dag 1 van de cyclus (ankerdatum)
+
+  function mealDayIndex(date) {
+    const diff = Math.floor((date - MEAL_START) / 86400000);
+    return ((diff % 30) + 30) % 30; // 0..29, altijd positief
+  }
+
+  function renderNutrition() {
+    const container = document.getElementById('nutrition-content');
+    if (!container || typeof MEAL_PLAN === 'undefined') return;
+    const date = new Date();
+    date.setDate(date.getDate() + mealOffset);
+    const idx = mealDayIndex(date);
+    const day = MEAL_PLAN[idx];
+
+    // dag-label
+    const lbl = document.getElementById('meal-day-label');
+    const dayName = date.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' });
+    lbl.textContent = mealOffset === 0 ? 'Vandaag · ' + dayName : dayName;
+
+    const moments = [
+      { key: 'ontbijt', label: 'ONTBIJT', icon: '🌅' },
+      { key: 'lunch', label: 'LUNCH', icon: '🥗' },
+      { key: 'diner', label: 'DINER', icon: '🍽️' },
+      { key: 'snack1', label: 'SNACK', icon: '🥤' },
+      { key: 'snack2', label: 'SNACK', icon: '🥤' }
+    ];
+    let html = '';
+    // dag-totaal bovenaan
+    const t = day.tot;
+    html += `<div class="meal-total-card">
+      <div class="meal-total-title">DAGTOTAAL</div>
+      <div class="meal-total-macros">
+        <div class="mt-macro"><span class="mt-val">${t.kcal}</span><span class="mt-lbl">kcal</span></div>
+        <div class="mt-macro"><span class="mt-val" style="color:var(--accent-purple)">${t.p}g</span><span class="mt-lbl">eiwit</span></div>
+        <div class="mt-macro"><span class="mt-val" style="color:var(--accent-cyan)">${t.c}g</span><span class="mt-lbl">koolh</span></div>
+        <div class="mt-macro"><span class="mt-val" style="color:var(--accent-orange)">${t.f}g</span><span class="mt-lbl">vet</span></div>
+      </div>
+    </div>`;
+    moments.forEach(m => {
+      const meal = day.meals[m.key];
+      if (!meal) return;
+      html += `<div class="meal-card">
+        <div class="meal-card-head">
+          <span class="meal-icon">${m.icon}</span>
+          <span class="meal-moment">${m.label}</span>
+          <span class="meal-fat ${meal.f > 20 ? 'over' : ''}">${meal.f}g vet</span>
+        </div>
+        <div class="meal-name">${meal.naam}</div>
+        ${meal.boost ? `<div class="meal-boost">💪 ${meal.boost}</div>` : ''}
+        <div class="meal-macros">
+          <span class="mm kcal">${meal.kcal} kcal</span>
+          <span class="mm p">${meal.p}g eiwit</span>
+          <span class="mm c">${meal.c}g koolh</span>
+        </div>
+      </div>`;
+    });
+    html += `<div class="meal-disclaimer">Voorbeelden ter inspiratie. Elke maaltijd blijft onder 20g vet. Macro's zijn schattingen — weeg/track voor precisie. Voor advies afgestemd op het ontbreken van je galblaas: raadpleeg een diëtist.</div>`;
+    html += `<div style="height:100px"></div>`;
+    container.innerHTML = html;
+  }
+
+  function renderFoodDB() {
+    const container = document.getElementById('fooddb-content');
+    if (!container || typeof FOOD_DB === 'undefined') return;
+    let html = '<div class="fooddb-list">';
+    html += `<div class="fooddb-hint">Producten uit je database. "(geschat)" betekent: nog checken tegen de verpakking.</div>`;
+    FOOD_DB.forEach(item => {
+      html += `<div class="fooddb-row">
+        <div class="fooddb-name">${item.product}</div>
+        <div class="fooddb-amount">${item.hoeveelheid}</div>
+        <div class="fooddb-macros">
+          <span class="fdm">${item.kcal} kcal</span>
+          <span class="fdm p">${item.eiwit} eiwit</span>
+          <span class="fdm c">${item.koolh} kh</span>
+          <span class="fdm f">${item.vet} vet</span>
+        </div>
+      </div>`;
+    });
+    html += '<div style="height:100px"></div></div>';
+    container.innerHTML = html;
+  }
+
+  function init() { setDate(); renderCards(); refreshHome(); bindHome(); bindSession(); bindHistory(); bindExportModal(); bindNutrition(); }
   function setDate() { document.getElementById('hero-date').textContent = new Date().toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' }); }
 
   // Bouwt de sessiekaarten dynamisch, gegroepeerd per categorie (modaliteit).
@@ -81,6 +166,21 @@ const App = (() => {
       document.getElementById('active-session-name').textContent = def?.name || '';
       banner.style.display = 'flex';
     } else { banner.style.display = 'none'; }
+  }
+
+  function bindNutrition() {
+    const openBtn = document.getElementById('btn-nutrition');
+    if (openBtn) openBtn.addEventListener('click', () => { mealOffset = 0; renderNutrition(); showScreen('screen-nutrition'); });
+    const backBtn = document.getElementById('btn-back-nutrition');
+    if (backBtn) backBtn.addEventListener('click', () => { showScreen('screen-home'); });
+    const prev = document.getElementById('btn-meal-prev');
+    if (prev) prev.addEventListener('click', () => { mealOffset--; renderNutrition(); });
+    const next = document.getElementById('btn-meal-next');
+    if (next) next.addEventListener('click', () => { mealOffset++; renderNutrition(); });
+    const openDb = document.getElementById('btn-open-fooddb');
+    if (openDb) openDb.addEventListener('click', () => { renderFoodDB(); showScreen('screen-fooddb'); });
+    const backDb = document.getElementById('btn-back-fooddb');
+    if (backDb) backDb.addEventListener('click', () => { showScreen('screen-nutrition'); });
   }
 
   function bindHome() {
