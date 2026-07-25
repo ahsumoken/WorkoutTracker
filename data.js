@@ -52,13 +52,45 @@ const SESSION_TYPES = {
     roundRestSec: 60,
     exercises: [
       { name: 'KB Sumo Deadlift', defaultWeight: '2x20kg' },
-      { name: 'KB Bulgarian Split Squat (R)', defaultWeight: '16kg' },
-      { name: 'KB Bulgarian Split Squat (L)', defaultWeight: '16kg' },
+      { name: 'KB Split Squat (R) — achtervoet op box = Bulgarian', defaultWeight: '16kg' },
+      { name: 'KB Split Squat (L) — achtervoet op box = Bulgarian', defaultWeight: '16kg' },
       { name: 'KB Push Press (R)', defaultWeight: '20kg' },
       { name: 'KB Push Press (L)', defaultWeight: '20kg' },
       { name: 'KB Hand-to-Hand Swing', defaultWeight: '20kg' },
       { name: 'KB Clean & Thruster (R)', defaultWeight: '16kg' },
       { name: 'KB Clean & Thruster (L)', defaultWeight: '16kg' }
+    ]
+  },
+  'kb-fullbody': {
+    name: 'Full Body KB Workout',
+    type: 'circuit',
+    rounds: 5,
+    workSec: 40,
+    restSec: 0,
+    roundRestSec: 90,
+    exercises: [
+      { name: 'Gorilla Cleans', defaultWeight: '2x16kg' },
+      { name: 'Hamstring Bridge Single Arm Press (R)', defaultWeight: '16kg' },
+      { name: 'Hamstring Bridge Single Arm Press (L)', defaultWeight: '16kg' },
+      { name: 'Front Lunge Pass Throughs', defaultWeight: '16kg' },
+      { name: 'Dead Stop Bent Rows', defaultWeight: '2x20kg' },
+      { name: 'Swing Clean + Push Press', defaultWeight: '2x16kg' }
+    ]
+  },
+  'plyo-box-hiit': {
+    name: 'Plyo Box HIIT',
+    type: 'circuit',
+    rounds: 4,
+    workSec: 40,
+    restSec: 20,
+    roundRestSec: 90,
+    exercises: [
+      { name: 'Box Jumps', defaultWeight: 'eigen gew.' },
+      { name: 'Verhoogde Push-ups (voeten op box)', defaultWeight: 'eigen gew.' },
+      { name: 'Box Step-ups (R)', defaultWeight: '2x16kg' },
+      { name: 'Box Step-ups (L)', defaultWeight: '2x16kg' },
+      { name: 'Burpees', defaultWeight: 'eigen gew.' },
+      { name: 'Box Dips', defaultWeight: 'eigen gew.' }
     ]
   },
   'kb-kracht': {
@@ -152,11 +184,11 @@ const SESSION_TYPES = {
     restSec: 15,
     roundRestSec: 60,
     exercises: [
-      { name: 'Deficit KB Step-up (R)', defaultWeight: '2x16kg' },
-      { name: 'Deficit KB Step-up (L)', defaultWeight: '2x16kg' },
+      { name: 'Deficit KB Step-up op box (R)', defaultWeight: '2x16kg' },
+      { name: 'Deficit KB Step-up op box (L)', defaultWeight: '2x16kg' },
       { name: 'KB Romanian Deadlift', defaultWeight: '2x20kg' },
       { name: 'KB Front Squat', defaultWeight: '2x20kg' },
-      { name: 'Feet-Elevated Push-up', defaultWeight: 'eigen gew.' },
+      { name: 'Feet-Elevated Push-up (voeten op box)', defaultWeight: 'eigen gew.' },
       { name: 'Inverted Ring Row', defaultWeight: 'eigen gew.' }
     ]
   },
@@ -266,7 +298,7 @@ const SESSION_CATEGORY = {
   'kettlebell': 'conditie', 'kettlebell-b': 'conditie',
   'alan-a': 'conditie', 'alan-b': 'conditie',
   'kb-flow': 'flow', 'kb-flow-terra': 'flow', 'kb-flow-spezia': 'flow',
-  'horse-legs': 'conditie',
+  'horse-legs': 'conditie', 'kb-fullbody': 'conditie', 'plyo-box-hiit': 'conditie',
   'spartan-50': 'conditie', 'bodyweight-murph': 'conditie',
   'kb-rope-amrap': 'conditie', 'ring-quest': 'kracht',
   'snacks': 'snack'
@@ -284,6 +316,8 @@ const CARD_META = {
   'compounds-b': { accent: "var(--accent-cyan)", tag: "GYM B", name: "Compounds B", sub: "RDL · Incline · Pull-up · Press", sets: "7 oefeningen · ~65 min" },
   'kettlebell': { accent: "var(--accent-orange)", tag: "CIRCUIT A", name: "Kettlebell Circuit A", sub: "18 sets · 0:45/0:15 · 3 ronden", sets: "6 oefeningen + finisher" },
   'kettlebell-b': { accent: "var(--accent-orange)", tag: "CIRCUIT B", name: "Kettlebell Circuit B", sub: "Sumo · Split Squat · Push Press · Thrusters", sets: "24 sets · 0:45/0:15 · 3 ronden" },
+  'kb-fullbody': { accent: "var(--accent-orange)", tag: "FULL BODY", name: "Full Body KB Workout", sub: "Gorilla Clean · Bridge Press · Lunge · Row", sets: "6 oefeningen · 5 sets · 1-2 min rust" },
+  'plyo-box-hiit': { accent: "var(--accent-red)", tag: "HIIT · BOX", name: "Plyo Box HIIT", sub: "Box Jumps · Verhoogde Push-ups · Step-ups · Burpees", sets: "6 oefeningen · 40/20 · 4 ronden · vetverbranding" },
   'kb-kracht': { accent: "var(--accent-red)", tag: "KB KRACHT", name: "KB Kracht", sub: "Front Squat · RDL · Press · Row · zwaar/laag", sets: "6 oefeningen · log kg & reps" },
   'kb-flow': { accent: "var(--accent-orange)", tag: "FLOW", name: "KB Flow", sub: "Curl → Squat → Swing → Snatch → Row → Plank", sets: "9 bewegingen · 1 doorlopende keten · 4 ronden" },
   'kb-flow-terra': { accent: "var(--accent-orange)", tag: "FLOW · TERRA", name: "TERRAFLOW", sub: "Swingclean → Lateral Clean → Slasher", sets: "5 bewegingen · enkele KB · Cavemantraining" },
@@ -321,6 +355,9 @@ const PATTERN_OVERRIDES = [
   { match: 'kneeling jump',    patterns: ['squat','locomotion'] },
   { match: 'knie-naar-sprong', patterns: ['squat','locomotion'] },
   { match: 'jump squat',       patterns: ['squat','locomotion'] },
+  { match: 'box jump',         patterns: ['squat','locomotion'] },
+  { match: 'box step-up',      patterns: ['lunge','locomotion'] },
+  { match: 'box dip',          patterns: ['push'] },
   { match: 'jumping lunge',    patterns: ['lunge','locomotion'] },
   { match: 'wisselsprongen',   patterns: ['lunge','locomotion'] },
   { match: 'kniestoten',       patterns: ['lunge','core'] },
