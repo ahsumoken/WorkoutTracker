@@ -93,6 +93,21 @@ const SESSION_TYPES = {
       { name: 'Box Dips', defaultWeight: 'eigen gew.' }
     ]
   },
+  'animal-pushups': {
+    name: 'Animal Flow Push-ups',
+    type: 'circuit',
+    rounds: 3,
+    workSec: 40,
+    restSec: 20,
+    roundRestSec: 90,
+    exercises: [
+      { name: 'Coil Push-up', defaultWeight: 'eigen gew.' },
+      { name: 'Crawling Push-up', defaultWeight: 'eigen gew.' },
+      { name: 'Monkey Push-up', defaultWeight: 'eigen gew.' },
+      { name: 'Negativa Push-up (L)', defaultWeight: 'eigen gew.' },
+      { name: 'Negativa Push-up (R)', defaultWeight: 'eigen gew.' }
+    ]
+  },
   'kb-kracht': {
     name: 'KB Kracht',
     type: 'gym',
@@ -297,7 +312,7 @@ const SESSION_CATEGORY = {
   'compounds-a': 'kracht', 'compounds-b': 'kracht', 'kb-kracht': 'kracht',
   'kettlebell': 'conditie', 'kettlebell-b': 'conditie',
   'alan-a': 'conditie', 'alan-b': 'conditie',
-  'kb-flow': 'flow', 'kb-flow-terra': 'flow', 'kb-flow-spezia': 'flow',
+  'kb-flow': 'flow', 'kb-flow-terra': 'flow', 'kb-flow-spezia': 'flow', 'animal-pushups': 'flow',
   'horse-legs': 'conditie', 'kb-fullbody': 'conditie', 'plyo-box-hiit': 'conditie',
   'spartan-50': 'conditie', 'bodyweight-murph': 'conditie',
   'kb-rope-amrap': 'conditie', 'ring-quest': 'kracht',
@@ -318,6 +333,7 @@ const CARD_META = {
   'kettlebell-b': { accent: "var(--accent-orange)", tag: "CIRCUIT B", name: "Kettlebell Circuit B", sub: "Sumo · Split Squat · Push Press · Thrusters", sets: "24 sets · 0:45/0:15 · 3 ronden" },
   'kb-fullbody': { accent: "var(--accent-orange)", tag: "FULL BODY", name: "Full Body KB Workout", sub: "Gorilla Clean · Bridge Press · Lunge · Row", sets: "6 oefeningen · 5 sets · 1-2 min rust" },
   'plyo-box-hiit': { accent: "var(--accent-red)", tag: "HIIT · BOX", name: "Plyo Box HIIT", sub: "Box Jumps · Verhoogde Push-ups · Step-ups · Burpees", sets: "6 oefeningen · 40/20 · 4 ronden · vetverbranding" },
+  'animal-pushups': { accent: "var(--accent-cyan)", tag: "ANIMAL FLOW", name: "Animal Flow Push-ups", sub: "Coil · Crawling · Monkey · Negativa", sets: "5 bewegingen · mobiliteit & controle · 3 ronden" },
   'kb-kracht': { accent: "var(--accent-red)", tag: "KB KRACHT", name: "KB Kracht", sub: "Front Squat · RDL · Press · Row · zwaar/laag", sets: "6 oefeningen · log kg & reps" },
   'kb-flow': { accent: "var(--accent-orange)", tag: "FLOW", name: "KB Flow", sub: "Curl → Squat → Swing → Snatch → Row → Plank", sets: "9 bewegingen · 1 doorlopende keten · 4 ronden" },
   'kb-flow-terra': { accent: "var(--accent-orange)", tag: "FLOW · TERRA", name: "TERRAFLOW", sub: "Swingclean → Lateral Clean → Slasher", sets: "5 bewegingen · enkele KB · Cavemantraining" },
@@ -355,6 +371,10 @@ const PATTERN_OVERRIDES = [
   { match: 'kneeling jump',    patterns: ['squat','locomotion'] },
   { match: 'knie-naar-sprong', patterns: ['squat','locomotion'] },
   { match: 'jump squat',       patterns: ['squat','locomotion'] },
+  { match: 'coil push-up',     patterns: ['push','rotation'] },
+  { match: 'crawling push-up', patterns: ['push','core'] },
+  { match: 'monkey push-up',   patterns: ['push','squat','rotation'] },
+  { match: 'negativa',         patterns: ['push','rotation','lunge'] },
   { match: 'box jump',         patterns: ['squat','locomotion'] },
   { match: 'box step-up',      patterns: ['lunge','locomotion'] },
   { match: 'box dip',          patterns: ['push'] },
