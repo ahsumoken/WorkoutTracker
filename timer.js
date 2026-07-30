@@ -101,10 +101,14 @@ const Timer = (() => {
     }
 
     if (currentPhase === 'WERK') {
-      if (opts.restSec > 0) {
+      const perRound = (opts.exercises || []).length;
+      const isLastOfRound = (currentSet % perRound === 0); // laatste oefening van de ronde
+      if (opts.restSec > 0 && !isLastOfRound) {
         currentPhase = 'RUST';
         setPhaseTime(opts.restSec);
       } else {
+        // laatste oefening van de ronde (of geen tussen-rust): direct door.
+        // nextSet() zet dan zelf de RONDE RUST als de ronde klaar is.
         nextSet();
       }
     } else if (currentPhase === 'RONDE RUST') {

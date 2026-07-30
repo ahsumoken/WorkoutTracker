@@ -190,9 +190,9 @@ const Session = (() => {
       <div class="circuit-start-row">
         <div>
           <div class="circuit-start-label">${def.name}</div>
-          <div class="circuit-sub">${def.name === 'Muay Thai Horse Legs' ? 'Reps-circuit · tel zelf · 20-30s rust tussen oefeningen' : def.workSec + 's werk / ' + def.restSec + 's rust'}</div>
+          <div class="circuit-sub">${def.repsBased ? 'Reps-circuit · tel zelf · 20-30s rust tussen oefeningen' : def.workSec + 's werk / ' + def.restSec + 's rust'}</div>
         </div>
-        <button class="btn-start-timer" id="btn-cir-start"${def.name === 'Muay Thai Horse Legs' ? ' style="display:none"' : ''}>▶ START</button>
+        <button class="btn-start-timer" id="btn-cir-start"${def.repsBased ? ' style="display:none"' : ''}>▶ START</button>
       </div>
       <div style="padding:12px 14px 4px;display:flex;align-items:center;gap:12px;">
         <label style="font-size:11px;color:var(--text-3);letter-spacing:1px;text-transform:uppercase;white-space:nowrap;">RONDES</label>
@@ -255,7 +255,7 @@ const Session = (() => {
       // Ronde-terugloop indicator
       exHtml += `<div class="flow-loopback"><span class="flow-loop-icon">↻</span> Terug naar begin — herhaal de keten</div>`;
       exHtml += `</div>`;
-    } else if (def.name === 'Muay Thai Horse Legs') {
+    } else if (def.repsBased) {
       // Reps-gebaseerd circuit: toon reps-lijst, geen tijd-timer
       exHtml = `<div style="padding:12px 14px;border-bottom:1px solid var(--border)"><div class="section-title">CIRCUIT · ${def.rounds} RONDES · TEL ZELF JE REPS</div></div><div class="circuit-exercises">`;
       def.exercises.forEach((ex, i) => {
@@ -265,7 +265,11 @@ const Session = (() => {
         </div>`;
       });
       exHtml += `</div>`;
-      exHtml += `<div class="reps-hint">⚠️ Knie-intensief. Warm goed op. Land zacht op de bal van je voet. Schaal 50 squats naar 30 als startpunt. Rust 20-30s tussen oefeningen, 2-3 min na elke ronde.</div>`;
+      if (def.name === 'Muay Thai Horse Legs') {
+        exHtml += `<div class="reps-hint">⚠️ Knie-intensief. Warm goed op. Land zacht op de bal van je voet. Schaal 50 squats naar 30 als startpunt. Rust 20-30s tussen oefeningen, 2-3 min na elke ronde.</div>`;
+      } else {
+        exHtml += `<div class="reps-hint">Tel zelf je reps. Rust 20-30s tussen oefeningen, langer tussen de rondes. Schaal reps omlaag als een ronde te zwaar wordt.</div>`;
+      }
     } else {
       exHtml = `<div style="padding:12px 14px;border-bottom:1px solid var(--border)"><div class="section-title">OEFENINGEN</div></div><div class="circuit-exercises">`;
       def.exercises.forEach((ex, i) => {

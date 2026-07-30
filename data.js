@@ -80,7 +80,7 @@ const SESSION_TYPES = {
   'plyo-box-hiit': {
     name: 'Plyo Box HIIT',
     type: 'circuit',
-    rounds: 4,
+    rounds: 3,
     workSec: 40,
     restSec: 20,
     roundRestSec: 90,
@@ -106,6 +106,112 @@ const SESSION_TYPES = {
       { name: 'Monkey Push-up', defaultWeight: 'eigen gew.' },
       { name: 'Negativa Push-up (L)', defaultWeight: 'eigen gew.' },
       { name: 'Negativa Push-up (R)', defaultWeight: 'eigen gew.' }
+    ]
+  },
+  'bodyweight-25s': {
+    name: 'Bodyweight 25s',
+    type: 'circuit',
+    rounds: 3,
+    workSec: 0,
+    restSec: 20,
+    roundRestSec: 120,
+    repsBased: true,
+    exercises: [
+      { name: 'Burpees (25x)', defaultWeight: 'eigen gew.' },
+      { name: 'Squats (25x)', defaultWeight: 'eigen gew.' },
+      { name: 'Push-ups (25x)', defaultWeight: 'eigen gew.' },
+      { name: 'Seated Alt. Leg Lifts / Knee Tucks over object (25x)', defaultWeight: 'eigen gew.' }
+    ]
+  },
+  'bw-pullburpsquat': {
+    name: 'BW: Pull-up / Burpee / Squat',
+    type: 'circuit', rounds: 3, workSec: 0, restSec: 20, roundRestSec: 120, repsBased: true,
+    exercises: [
+      { name: 'Negatieve Pull-ups (15x)', defaultWeight: 'eigen gew.' },
+      { name: 'Burpees (20x)', defaultWeight: 'eigen gew.' },
+      { name: 'Squats (25x)', defaultWeight: 'eigen gew.' }
+    ]
+  },
+  'bw-dipburplunge': {
+    name: 'BW: Dip / Burpee / Lunge / Sit-up',
+    type: 'circuit', rounds: 3, workSec: 0, restSec: 20, roundRestSec: 120, repsBased: true,
+    exercises: [
+      { name: 'Dips (20x)', defaultWeight: 'eigen gew.' },
+      { name: 'Burpees (20x)', defaultWeight: 'eigen gew.' },
+      { name: 'Lunges (24x, 12 p/kant)', defaultWeight: 'eigen gew.' },
+      { name: 'Sit-ups (25x)', defaultWeight: 'eigen gew.' }
+    ]
+  },
+  'bw-vsitpushsquat': {
+    name: 'BW: V-sit / Push-up / Squat',
+    type: 'circuit', rounds: 3, workSec: 0, restSec: 20, roundRestSec: 120, repsBased: true,
+    exercises: [
+      { name: 'V-sit-ups (20x)', defaultWeight: 'eigen gew.' },
+      { name: 'Push-ups (25x)', defaultWeight: 'eigen gew.' },
+      { name: 'Squats (25x)', defaultWeight: 'eigen gew.' }
+    ]
+  },
+  'bw-upper': {
+    name: 'BW: Upper Focus',
+    type: 'circuit', rounds: 3, workSec: 0, restSec: 20, roundRestSec: 120, repsBased: true,
+    exercises: [
+      { name: 'Push-ups (25x)', defaultWeight: 'eigen gew.' },
+      { name: 'Pike Push-ups (15x)', defaultWeight: 'eigen gew.' },
+      { name: 'Ring Rows (20x)', defaultWeight: 'eigen gew.' },
+      { name: 'Dips (20x)', defaultWeight: 'eigen gew.' }
+    ]
+  },
+  'bw-lower': {
+    name: 'BW: Lower Focus',
+    type: 'circuit', rounds: 3, workSec: 0, restSec: 20, roundRestSec: 120, repsBased: true,
+    exercises: [
+      { name: 'Squats (25x)', defaultWeight: 'eigen gew.' },
+      { name: 'Lunges (24x, 12 p/kant)', defaultWeight: 'eigen gew.' },
+      { name: 'Glute Bridges (25x)', defaultWeight: 'eigen gew.' },
+      { name: 'Calf Raises (25x)', defaultWeight: 'eigen gew.' }
+    ]
+  },
+  'bw-core-cardio': {
+    name: 'BW: Core & Cardio',
+    type: 'circuit', rounds: 3, workSec: 0, restSec: 20, roundRestSec: 120, repsBased: true,
+    exercises: [
+      { name: 'Burpees (25x)', defaultWeight: 'eigen gew.' },
+      { name: 'Mountain Climbers (25x totaal)', defaultWeight: 'eigen gew.' },
+      { name: 'Hanging Leg Raises (ab straps, 15x)', defaultWeight: 'eigen gew.' },
+      { name: 'Jumping Jacks (25x)', defaultWeight: 'eigen gew.' }
+    ]
+  },
+  'bw-box': {
+    name: 'BW: Box Circuit',
+    type: 'circuit', rounds: 3, workSec: 0, restSec: 20, roundRestSec: 120, repsBased: true,
+    exercises: [
+      { name: 'Box Jumps (15x)', defaultWeight: 'eigen gew.' },
+      { name: 'Verhoogde Push-ups (voeten op box, 20x)', defaultWeight: 'eigen gew.' },
+      { name: 'Box Step-ups (24x, 12 p/kant)', defaultWeight: 'eigen gew.' },
+      { name: 'Box Dips (20x)', defaultWeight: 'eigen gew.' }
+    ]
+  },
+  'barbell-power': {
+    name: 'Barbell Power (20kg)',
+    type: 'gym',
+    exercises: [
+      { id: 'bb-squat', name: 'Barbell Front Squat', sets: 4, reps: '8-10' },
+      { id: 'bb-rdl', name: 'Barbell RDL', sets: 4, reps: '8-10' },
+      { id: 'bb-ohp', name: 'Barbell Overhead Press', sets: 4, reps: '8-10' },
+      { id: 'bb-row', name: 'Barbell Bent-Over Row', sets: 4, reps: '8-10' },
+      { id: 'bb-curl', name: 'Barbell Curl', sets: 3, reps: '10-12' }
+    ]
+  },
+  'kb-band-hiit': {
+    name: 'KB & Band HIIT',
+    type: 'circuit', rounds: 4, workSec: 40, restSec: 20, roundRestSec: 90,
+    exercises: [
+      { name: 'KB Swing', defaultWeight: '20kg' },
+      { name: 'Assisted Pull-ups (band)', defaultWeight: 'band' },
+      { name: 'KB Goblet Squat', defaultWeight: '20kg' },
+      { name: 'Band Push-ups', defaultWeight: 'band' },
+      { name: 'KB Clean & Press (R)', defaultWeight: '16kg' },
+      { name: 'KB Clean & Press (L)', defaultWeight: '16kg' }
     ]
   },
   'kb-kracht': {
@@ -310,18 +416,24 @@ const MOVEMENT_PATTERNS = {
 // Sessie -> modaliteit (hoofdcategorie)
 const SESSION_CATEGORY = {
   'compounds-a': 'kracht', 'compounds-b': 'kracht', 'kb-kracht': 'kracht',
+  'barbell-power': 'kracht',
   'kettlebell': 'conditie', 'kettlebell-b': 'conditie',
   'alan-a': 'conditie', 'alan-b': 'conditie',
+  'kb-fullbody': 'conditie', 'kb-rope-amrap': 'conditie', 'ring-quest': 'kracht',
   'kb-flow': 'flow', 'kb-flow-terra': 'flow', 'kb-flow-spezia': 'flow', 'animal-pushups': 'flow',
-  'horse-legs': 'conditie', 'kb-fullbody': 'conditie', 'plyo-box-hiit': 'conditie',
-  'spartan-50': 'conditie', 'bodyweight-murph': 'conditie',
-  'kb-rope-amrap': 'conditie', 'ring-quest': 'kracht',
+  'plyo-box-hiit': 'hiit', 'horse-legs': 'hiit', 'spartan-50': 'hiit', 'bodyweight-murph': 'hiit',
+  'kb-band-hiit': 'hiit',
+  'bodyweight-25s': 'bodyweight', 'bw-pullburpsquat': 'bodyweight', 'bw-dipburplunge': 'bodyweight',
+  'bw-vsitpushsquat': 'bodyweight', 'bw-upper': 'bodyweight', 'bw-lower': 'bodyweight',
+  'bw-core-cardio': 'bodyweight', 'bw-box': 'bodyweight',
   'snacks': 'snack'
 };
 
 const CATEGORY_LABELS = {
   kracht:   { label: 'KRACHT',   color: '#a855f7' },
   conditie: { label: 'CONDITIE', color: '#f97316' },
+  hiit:     { label: 'HIIT / PLYO', color: '#ef4444' },
+  bodyweight: { label: 'BODYWEIGHT', color: '#22c55e' },
   flow:     { label: 'FLOW',     color: '#06b6d4' },
   snack:    { label: 'SNACKS',   color: '#eab308' }
 };
@@ -332,8 +444,18 @@ const CARD_META = {
   'kettlebell': { accent: "var(--accent-orange)", tag: "CIRCUIT A", name: "Kettlebell Circuit A", sub: "18 sets · 0:45/0:15 · 3 ronden", sets: "6 oefeningen + finisher" },
   'kettlebell-b': { accent: "var(--accent-orange)", tag: "CIRCUIT B", name: "Kettlebell Circuit B", sub: "Sumo · Split Squat · Push Press · Thrusters", sets: "24 sets · 0:45/0:15 · 3 ronden" },
   'kb-fullbody': { accent: "var(--accent-orange)", tag: "FULL BODY", name: "Full Body KB Workout", sub: "Gorilla Clean · Bridge Press · Lunge · Row", sets: "6 oefeningen · 5 sets · 1-2 min rust" },
-  'plyo-box-hiit': { accent: "var(--accent-red)", tag: "HIIT · BOX", name: "Plyo Box HIIT", sub: "Box Jumps · Verhoogde Push-ups · Step-ups · Burpees", sets: "6 oefeningen · 40/20 · 4 ronden · vetverbranding" },
+  'plyo-box-hiit': { accent: "var(--accent-red)", tag: "HIIT · BOX", name: "Plyo Box HIIT", sub: "Box Jumps · Verhoogde Push-ups · Step-ups · Burpees", sets: "6 oefeningen · 40/20 · 3 ronden · vetverbranding" },
   'animal-pushups': { accent: "var(--accent-cyan)", tag: "ANIMAL FLOW", name: "Animal Flow Push-ups", sub: "Coil · Crawling · Monkey · Negativa", sets: "5 bewegingen · mobiliteit & controle · 3 ronden" },
+  'bodyweight-25s': { accent: "var(--accent-red)", tag: "BODYWEIGHT", name: "Bodyweight 25s", sub: "Burpees · Squats · Push-ups · Leg Lifts", sets: "4 oefeningen · 25 reps · 3 ronden" },
+  'bw-pullburpsquat': { accent: "var(--accent-green)", tag: "BODYWEIGHT", name: "Pull-up / Burpee / Squat", sub: "Negatieve Pull-ups · Burpees · Squats", sets: "3 oefeningen · reps · 3 ronden" },
+  'bw-dipburplunge': { accent: "var(--accent-green)", tag: "BODYWEIGHT", name: "Dip / Burpee / Lunge / Sit-up", sub: "Dips · Burpees · Lunges · Sit-ups", sets: "4 oefeningen · reps · 3 ronden" },
+  'bw-vsitpushsquat': { accent: "var(--accent-green)", tag: "BODYWEIGHT", name: "V-sit / Push-up / Squat", sub: "V-sit-ups · Push-ups · Squats", sets: "3 oefeningen · reps · 3 ronden" },
+  'bw-upper': { accent: "var(--accent-green)", tag: "BW · UPPER", name: "Upper Focus", sub: "Push-ups · Pike · Ring Rows · Dips", sets: "4 oefeningen · reps · 3 ronden" },
+  'bw-lower': { accent: "var(--accent-green)", tag: "BW · LOWER", name: "Lower Focus", sub: "Squats · Lunges · Glute Bridges · Calf", sets: "4 oefeningen · reps · 3 ronden" },
+  'bw-core-cardio': { accent: "var(--accent-green)", tag: "BW · CORE", name: "Core & Cardio", sub: "Burpees · Climbers · Leg Raises · Jacks", sets: "4 oefeningen · reps · 3 ronden" },
+  'bw-box': { accent: "var(--accent-green)", tag: "BW · BOX", name: "Box Circuit", sub: "Box Jumps · Verhoogde Push-ups · Step-ups · Dips", sets: "4 oefeningen · reps · 3 ronden" },
+  'barbell-power': { accent: "var(--accent-blue)", tag: "BARBELL", name: "Barbell Power (20kg)", sub: "Front Squat · RDL · OHP · Row · Curl", sets: "5 oefeningen · log kg & reps" },
+  'kb-band-hiit': { accent: "var(--accent-red)", tag: "KB · BAND", name: "KB & Band HIIT", sub: "Swing · Assisted Pull-up · Goblet · Clean & Press", sets: "6 oefeningen · 40/20 · 4 ronden" },
   'kb-kracht': { accent: "var(--accent-red)", tag: "KB KRACHT", name: "KB Kracht", sub: "Front Squat · RDL · Press · Row · zwaar/laag", sets: "6 oefeningen · log kg & reps" },
   'kb-flow': { accent: "var(--accent-orange)", tag: "FLOW", name: "KB Flow", sub: "Curl → Squat → Swing → Snatch → Row → Plank", sets: "9 bewegingen · 1 doorlopende keten · 4 ronden" },
   'kb-flow-terra': { accent: "var(--accent-orange)", tag: "FLOW · TERRA", name: "TERRAFLOW", sub: "Swingclean → Lateral Clean → Slasher", sets: "5 bewegingen · enkele KB · Cavemantraining" },
@@ -371,6 +493,17 @@ const PATTERN_OVERRIDES = [
   { match: 'kneeling jump',    patterns: ['squat','locomotion'] },
   { match: 'knie-naar-sprong', patterns: ['squat','locomotion'] },
   { match: 'jump squat',       patterns: ['squat','locomotion'] },
+  { match: 'pike push-up',     patterns: ['push'] },
+  { match: 'glute bridge',     patterns: ['hinge'] },
+  { match: 'mountain climber', patterns: ['core','locomotion'] },
+  { match: 'jumping jack',     patterns: ['locomotion'] },
+  { match: 'v-sit',            patterns: ['core'] },
+  { match: 'sit-up',           patterns: ['core'] },
+  { match: 'barbell curl',     patterns: ['pull'] },
+  { match: 'band push-up',     patterns: ['push'] },
+  { match: 'assisted pull-up', patterns: ['pull'] },
+  { match: 'knee tuck',        patterns: ['core'] },
+  { match: 'leg lift',         patterns: ['core'] },
   { match: 'coil push-up',     patterns: ['push','rotation'] },
   { match: 'crawling push-up', patterns: ['push','core'] },
   { match: 'monkey push-up',   patterns: ['push','squat','rotation'] },

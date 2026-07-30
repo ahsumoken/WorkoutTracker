@@ -108,7 +108,7 @@ const App = (() => {
     const container = document.getElementById('session-cards');
     if (!container) return;
     // groepeer sessietypes op categorie, in vaste volgorde
-    const order = ['kracht', 'conditie', 'flow', 'snack'];
+    const order = ['kracht', 'conditie', 'hiit', 'bodyweight', 'flow', 'snack'];
     const groups = {};
     Object.keys(SESSION_TYPES).forEach(type => {
       const cat = (typeof SESSION_CATEGORY !== 'undefined' && SESSION_CATEGORY[type]) || 'conditie';
