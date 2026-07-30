@@ -214,6 +214,18 @@ const SESSION_TYPES = {
       { name: 'KB Clean & Press (L)', defaultWeight: '16kg' }
     ]
   },
+  'pullup-prep': {
+    name: 'Pull-up Prep',
+    type: 'gym',
+    exercises: [
+      { id: 'scap-pullup', name: 'Scapular Pull-ups', sets: 3, reps: '8-10' },
+      { id: 'lean-row', name: 'Lean-back Ring Rows', sets: 3, reps: '10-12' },
+      { id: 'assist-pullup', name: 'Assisted Pull-ups (band)', sets: 3, reps: '6-8' },
+      { id: 'neg-pullup', name: 'Negatieve Pull-ups (3-5s zakken)', sets: 3, reps: '5' },
+      { id: 'dead-hang', name: 'Dead Hang', sets: 3, reps: 'max sec' },
+      { id: 'dips-prep', name: 'Dips (lagere borst)', sets: 3, reps: '8-10' }
+    ]
+  },
   'kb-kracht': {
     name: 'KB Kracht',
     type: 'gym',
@@ -416,7 +428,7 @@ const MOVEMENT_PATTERNS = {
 // Sessie -> modaliteit (hoofdcategorie)
 const SESSION_CATEGORY = {
   'compounds-a': 'kracht', 'compounds-b': 'kracht', 'kb-kracht': 'kracht',
-  'barbell-power': 'kracht',
+  'barbell-power': 'kracht', 'pullup-prep': 'kracht',
   'kettlebell': 'conditie', 'kettlebell-b': 'conditie',
   'alan-a': 'conditie', 'alan-b': 'conditie',
   'kb-fullbody': 'conditie', 'kb-rope-amrap': 'conditie', 'ring-quest': 'kracht',
@@ -456,6 +468,7 @@ const CARD_META = {
   'bw-box': { accent: "var(--accent-green)", tag: "BW · BOX", name: "Box Circuit", sub: "Box Jumps · Verhoogde Push-ups · Step-ups · Dips", sets: "4 oefeningen · reps · 3 ronden" },
   'barbell-power': { accent: "var(--accent-blue)", tag: "BARBELL", name: "Barbell Power (20kg)", sub: "Front Squat · RDL · OHP · Row · Curl", sets: "5 oefeningen · log kg & reps" },
   'kb-band-hiit': { accent: "var(--accent-red)", tag: "KB · BAND", name: "KB & Band HIIT", sub: "Swing · Assisted Pull-up · Goblet · Clean & Press", sets: "6 oefeningen · 40/20 · 4 ronden" },
+  'pullup-prep': { accent: "var(--accent-blue)", tag: "PULL-UP PREP", name: "Pull-up Prep", sub: "Scapular · Lean Rows · Assisted · Negatief · Dips", sets: "6 oefeningen · opbouw naar pull-up · log reps" },
   'kb-kracht': { accent: "var(--accent-red)", tag: "KB KRACHT", name: "KB Kracht", sub: "Front Squat · RDL · Press · Row · zwaar/laag", sets: "6 oefeningen · log kg & reps" },
   'kb-flow': { accent: "var(--accent-orange)", tag: "FLOW", name: "KB Flow", sub: "Curl → Squat → Swing → Snatch → Row → Plank", sets: "9 bewegingen · 1 doorlopende keten · 4 ronden" },
   'kb-flow-terra': { accent: "var(--accent-orange)", tag: "FLOW · TERRA", name: "TERRAFLOW", sub: "Swingclean → Lateral Clean → Slasher", sets: "5 bewegingen · enkele KB · Cavemantraining" },
@@ -501,6 +514,9 @@ const PATTERN_OVERRIDES = [
   { match: 'sit-up',           patterns: ['core'] },
   { match: 'barbell curl',     patterns: ['pull'] },
   { match: 'band push-up',     patterns: ['push'] },
+  { match: 'scapular pull',    patterns: ['pull'] },
+  { match: 'dead hang',        patterns: ['pull','carry'] },
+  { match: 'lean-back',        patterns: ['pull'] },
   { match: 'assisted pull-up', patterns: ['pull'] },
   { match: 'knee tuck',        patterns: ['core'] },
   { match: 'leg lift',         patterns: ['core'] },

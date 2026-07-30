@@ -210,6 +210,13 @@ const App = (() => {
     document.getElementById('btn-modal-close').addEventListener('click', cls);
     document.getElementById('modal-export-backdrop').addEventListener('click', cls);
     document.getElementById('btn-copy').addEventListener('click', () => { const txt = document.getElementById('export-text').value; if (navigator.clipboard) { navigator.clipboard.writeText(txt).then(() => showToast('Gekopieerd! ✓')); } });
+    document.getElementById('btn-copy-whoop').addEventListener('click', () => {
+      const s = Export.getLastSession();
+      if (!s) { showToast('Geen sessie.'); return; }
+      const txt = Export.generateWhoop(s);
+      document.getElementById('export-text').value = txt;
+      if (navigator.clipboard) { navigator.clipboard.writeText(txt).then(() => showToast('Whoop-formaat gekopieerd! ✓')); }
+    });
     document.getElementById('btn-copy-all').addEventListener('click', () => { const txt = Export.generateAll(); if (navigator.clipboard) { navigator.clipboard.writeText(txt).then(() => showToast('Alle logs gekopieerd! ✓')); } });
   }
 

@@ -1,5 +1,50 @@
 const Export = (() => {
+  // Schoon formaat voor Whoop AI: oefeningen, seconden/oefening, ronden, totale tijd.
+  function generateWhoop(s) {
+    const def = SESSION_TYPES[s.type];
+    if (!def) return 'Sessie niet gevonden.';
+    const d = new Date(s.timestamp || s.date);
+    const dateStr = d.toLocaleDateString('nl-NL', { day:'numeric', month:'long', year:'numeric' });
+    const L = [];
+    L.push(`Workout: ${def.name}`);
+    L.push(`Datum: ${dateStr}`);
+    if (s.duration) L.push(`Totale tijd: ${fmtDur(s.duration)}`);
+
+    if (def.type === 'circuit') {
+      if (def.workSec) L.push(`Interval: ${def.workSec}s werk / ${def.restSec}s rust per oefening`);
+      if (def.roundRestSec) L.push(`Rust tussen ronden: ${def.roundRestSec}s`);
+      L.push(`Ronden voltooid: ${s.rounds || def.rounds} van ${def.rounds}`);
+      L.push('Oefeningen:');
+      def.exercises?.forEach(ex => {
+        let line = `- ${ex.name}`;
+        if (ex.defaultWeight && ex.defaultWeight !== 'eigen gew.') line += ` (${ex.defaultWeight})`;
+        if (def.workSec) line += ` — ${def.workSec}s`;
+        L.push(line);
+      });
+      if (s.rpe) L.push(`RPE: ${s.rpe}/10`);
+    } else if (def.type === 'gym' && s.exercises) {
+      L.push('Oefeningen:');
+      Object.values(s.exercises).forEach(ex => {
+        const sets = (ex.sets || []).filter(st => st.weight || st.reps);
+        if (!sets.length) { L.push(`- ${ex.name}`); return; }
+        const setStr = sets.map(st => `${st.weight||'?'}kg×${st.reps||'?'}`).join(', ');
+        L.push(`- ${ex.name}: ${setStr}`);
+      });
+      if (s.globalRpe) L.push(`RPE: ${s.globalRpe}/10`);
+    } else if (s.type === 'snacks') {
+      const opt = SESSION_TYPES.snacks?.options?.find(o => o.id === s.snackId);
+      if (opt) {
+        L.push(`Snack: ${opt.name}`);
+        L.push(`Ronden: ${s.rounds || '—'}`);
+      }
+      if (s.rpe) L.push(`RPE: ${s.rpe}/10`);
+    }
+    return L.join('\n');
+  }
+
+  let lastSession = null;
   function showForSession(s) {
+    lastSession = s;
     document.getElementById('export-text').value = generate(s);
     document.getElementById('modal-export').classList.remove('hidden');
   }
@@ -130,5 +175,5 @@ const Export = (() => {
     return m ? `${m}min${s?` ${s}sec`:''}` : `${sec}sec`;
   }
 
-  return { showForSession, generateAll };
+  return { showForSession, generateAll, generateWhoop, getLastSession: () => lastSession };
 })();
