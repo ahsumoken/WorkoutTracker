@@ -191,6 +191,17 @@ const SESSION_TYPES = {
       { name: 'Box Dips (20x)', defaultWeight: 'eigen gew.' }
     ]
   },
+  'bw-core-strength': {
+    name: 'BW: Core Strength',
+    type: 'circuit', rounds: 3, workSec: 0, restSec: 15, roundRestSec: 90, repsBased: true,
+    exercises: [
+      { name: 'Crunches (13x)', defaultWeight: 'eigen gew.' },
+      { name: 'Leg Raises (11x)', defaultWeight: 'eigen gew.' },
+      { name: 'V-ups (9x)', defaultWeight: 'eigen gew.' },
+      { name: 'In and Outs (7x)', defaultWeight: 'eigen gew.' },
+      { name: 'Plank Hold (1 min)', defaultWeight: 'eigen gew.' }
+    ]
+  },
   'barbell-power': {
     name: 'Barbell Power (20kg)',
     type: 'gym',
@@ -224,6 +235,77 @@ const SESSION_TYPES = {
       { id: 'neg-pullup', name: 'Negatieve Pull-ups (3-5s zakken)', sets: 3, reps: '5' },
       { id: 'dead-hang', name: 'Dead Hang', sets: 3, reps: 'max sec' },
       { id: 'dips-prep', name: 'Dips (lagere borst)', sets: 3, reps: '8-10' }
+    ]
+  },
+  'fullbody-core': {
+    name: 'Full Body + Core',
+    type: 'circuit',
+    rounds: 3,
+    workSec: 45,
+    restSec: 15,
+    roundRestSec: 90,
+    exercises: [
+      { name: 'KB Swing', defaultWeight: '20kg' },
+      { name: 'Box Step-ups met KB (R)', defaultWeight: '2x16kg' },
+      { name: 'Box Step-ups met KB (L)', defaultWeight: '2x16kg' },
+      { name: 'Negatieve Pull-ups (3-5s zakken)', defaultWeight: 'eigen gew.' },
+      { name: 'Dips', defaultWeight: 'eigen gew.' },
+      { name: 'KB Goblet Squat', defaultWeight: '20kg' },
+      { name: 'Hanging Leg Raises (ab straps)', defaultWeight: 'eigen gew.' },
+      { name: 'KB Renegade Row', defaultWeight: '2x16kg' }
+    ]
+  },
+  'arms-focus': {
+    name: 'Arms Focus (thuis)',
+    type: 'gym',
+    exercises: [
+      { id: 'af-oh-tri', name: 'Overhead Triceps Ext. (band/DB) — lange kop', sets: 3, reps: '10-12' },
+      { id: 'af-dip', name: 'Dips (triceps, volledige ROM)', sets: 3, reps: '8-12' },
+      { id: 'af-incl-curl', name: 'Incline DB Curl (verkorte→lange positie)', sets: 3, reps: '10-12' },
+      { id: 'af-band-curl', name: 'Band Curl (mid-range)', sets: 3, reps: '12-15' },
+      { id: 'af-band-push', name: 'Band Pushdown (contractie)', sets: 3, reps: '12-15' },
+      { id: 'af-hammer', name: 'Hammer Curl (DB, onderarm/brachialis)', sets: 3, reps: '10-12' }
+    ]
+  },
+  'arms-gym': {
+    name: 'Arms Gym',
+    type: 'gym',
+    exercises: [
+      { id: 'ag-oh-tri', name: 'Overhead Cable/DB Triceps Ext. — lange kop (stretch)', sets: 4, reps: '10-12' },
+      { id: 'ag-pushdown', name: 'Rope Pushdown (contractie, volledige strek)', sets: 4, reps: '12-15' },
+      { id: 'ag-bayesian', name: 'Bayesian Cable Curl (verkorte positie)', sets: 4, reps: '10-12' },
+      { id: 'ag-bb-curl', name: 'Barbell Curl (mid-range)', sets: 3, reps: '8-10' },
+      { id: 'ag-incl-curl', name: 'Incline DB Curl (stretch)', sets: 3, reps: '10-12' },
+      { id: 'ag-decline-tri', name: 'Decline/Skull Crusher (stretch)', sets: 3, reps: '10-12' }
+    ]
+  },
+  'arms-focus-2': {
+    name: 'Arms Focus 2 (thuis)',
+    type: 'gym',
+    exercises: [
+      { id: 'af2-chinup', name: 'Chin-ups / Assisted (band) — biceps', sets: 3, reps: '6-10' },
+      { id: 'af2-para-dip', name: 'Paralette Dips (triceps, diep)', sets: 3, reps: '8-12' },
+      { id: 'af2-zottman', name: 'Zottman Curl (DB, tot 26kg) — biceps + onderarm', sets: 3, reps: '10-12' },
+      { id: 'af2-kb-oh', name: 'Overhead Triceps Ext. (DB/KB) — lange kop', sets: 3, reps: '10-12' },
+      { id: 'af2-concent', name: 'Concentration Curl (DB) — piek-contractie', sets: 3, reps: '10-12' },
+      { id: 'af2-close-push', name: 'Close-grip Push-ups (paralettes) — triceps', sets: 3, reps: 'AMRAP' }
+    ]
+  },
+  'fullbody-mix': {
+    name: 'Full Body Mix',
+    type: 'circuit',
+    rounds: 4,
+    workSec: 40,
+    restSec: 20,
+    roundRestSec: 90,
+    exercises: [
+      { name: 'KB Swing', defaultWeight: '20kg' },
+      { name: 'Box Jumps', defaultWeight: 'eigen gew.' },
+      { name: 'Negatieve Pull-ups (3-5s)', defaultWeight: 'eigen gew.' },
+      { name: 'KB Goblet Squat', defaultWeight: '20kg' },
+      { name: 'Dips', defaultWeight: 'eigen gew.' },
+      { name: 'Hanging Leg Raises (ab straps)', defaultWeight: 'eigen gew.' },
+      { name: 'KB Russian Twist (core)', defaultWeight: '16kg' }
     ]
   },
   'kb-kracht': {
@@ -428,16 +510,16 @@ const MOVEMENT_PATTERNS = {
 // Sessie -> modaliteit (hoofdcategorie)
 const SESSION_CATEGORY = {
   'compounds-a': 'kracht', 'compounds-b': 'kracht', 'kb-kracht': 'kracht',
-  'barbell-power': 'kracht', 'pullup-prep': 'kracht',
+  'barbell-power': 'kracht', 'pullup-prep': 'kracht', 'arms-focus': 'kracht', 'arms-gym': 'kracht', 'arms-focus-2': 'kracht',
   'kettlebell': 'conditie', 'kettlebell-b': 'conditie',
   'alan-a': 'conditie', 'alan-b': 'conditie',
-  'kb-fullbody': 'conditie', 'kb-rope-amrap': 'conditie', 'ring-quest': 'kracht',
+  'kb-fullbody': 'conditie', 'kb-rope-amrap': 'conditie', 'ring-quest': 'kracht', 'fullbody-core': 'conditie', 'fullbody-mix': 'conditie',
   'kb-flow': 'flow', 'kb-flow-terra': 'flow', 'kb-flow-spezia': 'flow', 'animal-pushups': 'flow',
   'plyo-box-hiit': 'hiit', 'horse-legs': 'hiit', 'spartan-50': 'hiit', 'bodyweight-murph': 'hiit',
   'kb-band-hiit': 'hiit',
   'bodyweight-25s': 'bodyweight', 'bw-pullburpsquat': 'bodyweight', 'bw-dipburplunge': 'bodyweight',
   'bw-vsitpushsquat': 'bodyweight', 'bw-upper': 'bodyweight', 'bw-lower': 'bodyweight',
-  'bw-core-cardio': 'bodyweight', 'bw-box': 'bodyweight',
+  'bw-core-cardio': 'bodyweight', 'bw-box': 'bodyweight', 'bw-core-strength': 'bodyweight',
   'snacks': 'snack'
 };
 
@@ -456,6 +538,7 @@ const CARD_META = {
   'kettlebell': { accent: "var(--accent-orange)", tag: "CIRCUIT A", name: "Kettlebell Circuit A", sub: "18 sets · 0:45/0:15 · 3 ronden", sets: "6 oefeningen + finisher" },
   'kettlebell-b': { accent: "var(--accent-orange)", tag: "CIRCUIT B", name: "Kettlebell Circuit B", sub: "Sumo · Split Squat · Push Press · Thrusters", sets: "24 sets · 0:45/0:15 · 3 ronden" },
   'kb-fullbody': { accent: "var(--accent-orange)", tag: "FULL BODY", name: "Full Body KB Workout", sub: "Gorilla Clean · Bridge Press · Lunge · Row", sets: "6 oefeningen · 5 sets · 1-2 min rust" },
+  'fullbody-mix': { accent: "var(--accent-orange)", tag: "FULL BODY MIX", name: "Full Body Mix", sub: "Swing · Box Jump · Neg Pull-up · Dips · Core", sets: "7 oefeningen · 40/20 · 4 ronden · incl. buik" },
   'plyo-box-hiit': { accent: "var(--accent-red)", tag: "HIIT · BOX", name: "Plyo Box HIIT", sub: "Box Jumps · Verhoogde Push-ups · Step-ups · Burpees", sets: "6 oefeningen · 40/20 · 3 ronden · vetverbranding" },
   'animal-pushups': { accent: "var(--accent-cyan)", tag: "ANIMAL FLOW", name: "Animal Flow Push-ups", sub: "Coil · Crawling · Monkey · Negativa", sets: "5 bewegingen · mobiliteit & controle · 3 ronden" },
   'bodyweight-25s': { accent: "var(--accent-red)", tag: "BODYWEIGHT", name: "Bodyweight 25s", sub: "Burpees · Squats · Push-ups · Leg Lifts", sets: "4 oefeningen · 25 reps · 3 ronden" },
@@ -466,9 +549,14 @@ const CARD_META = {
   'bw-lower': { accent: "var(--accent-green)", tag: "BW · LOWER", name: "Lower Focus", sub: "Squats · Lunges · Glute Bridges · Calf", sets: "4 oefeningen · reps · 3 ronden" },
   'bw-core-cardio': { accent: "var(--accent-green)", tag: "BW · CORE", name: "Core & Cardio", sub: "Burpees · Climbers · Leg Raises · Jacks", sets: "4 oefeningen · reps · 3 ronden" },
   'bw-box': { accent: "var(--accent-green)", tag: "BW · BOX", name: "Box Circuit", sub: "Box Jumps · Verhoogde Push-ups · Step-ups · Dips", sets: "4 oefeningen · reps · 3 ronden" },
+  'bw-core-strength': { accent: "var(--accent-green)", tag: "BW · CORE", name: "Core Strength", sub: "Crunches · Leg Raises · V-ups · In&Outs · Plank", sets: "5 oefeningen · reps · 3 ronden" },
   'barbell-power': { accent: "var(--accent-blue)", tag: "BARBELL", name: "Barbell Power (20kg)", sub: "Front Squat · RDL · OHP · Row · Curl", sets: "5 oefeningen · log kg & reps" },
   'kb-band-hiit': { accent: "var(--accent-red)", tag: "KB · BAND", name: "KB & Band HIIT", sub: "Swing · Assisted Pull-up · Goblet · Clean & Press", sets: "6 oefeningen · 40/20 · 4 ronden" },
   'pullup-prep': { accent: "var(--accent-blue)", tag: "PULL-UP PREP", name: "Pull-up Prep", sub: "Scapular · Lean Rows · Assisted · Negatief · Dips", sets: "6 oefeningen · opbouw naar pull-up · log reps" },
+  'fullbody-core': { accent: "var(--accent-orange)", tag: "FULL BODY + CORE", name: "Full Body + Core", sub: "Swing · Box Step-up · Neg. Pull-up · Dips · Leg Raises", sets: "8 oefeningen · 45/15 · 3 ronden" },
+  'arms-focus': { accent: "var(--accent-purple)", tag: "ARMS · THUIS", name: "Arms Focus (thuis)", sub: "Overhead Ext · Dips · Incline Curl · Hammer", sets: "6 oefeningen · isolatie · alle posities" },
+  'arms-gym': { accent: "var(--accent-purple)", tag: "ARMS · GYM", name: "Arms Gym", sub: "Overhead Ext · Pushdown · Bayesian · Barbell Curl", sets: "6 oefeningen · kabels · lange kop focus" },
+  'arms-focus-2': { accent: "var(--accent-purple)", tag: "ARMS · THUIS 2", name: "Arms Focus 2 (thuis)", sub: "Chin-ups · Paralette Dips · Zottman · Concentration", sets: "6 oefeningen · trek + lichaamsgewicht" },
   'kb-kracht': { accent: "var(--accent-red)", tag: "KB KRACHT", name: "KB Kracht", sub: "Front Squat · RDL · Press · Row · zwaar/laag", sets: "6 oefeningen · log kg & reps" },
   'kb-flow': { accent: "var(--accent-orange)", tag: "FLOW", name: "KB Flow", sub: "Curl → Squat → Swing → Snatch → Row → Plank", sets: "9 bewegingen · 1 doorlopende keten · 4 ronden" },
   'kb-flow-terra': { accent: "var(--accent-orange)", tag: "FLOW · TERRA", name: "TERRAFLOW", sub: "Swingclean → Lateral Clean → Slasher", sets: "5 bewegingen · enkele KB · Cavemantraining" },
@@ -510,16 +598,25 @@ const PATTERN_OVERRIDES = [
   { match: 'glute bridge',     patterns: ['hinge'] },
   { match: 'mountain climber', patterns: ['core','locomotion'] },
   { match: 'jumping jack',     patterns: ['locomotion'] },
+  { match: 'crunch',           patterns: ['core'] },
+  { match: 'v-up',             patterns: ['core'] },
+  { match: 'in and out',       patterns: ['core'] },
   { match: 'v-sit',            patterns: ['core'] },
   { match: 'sit-up',           patterns: ['core'] },
   { match: 'barbell curl',     patterns: ['pull'] },
   { match: 'band push-up',     patterns: ['push'] },
+  { match: 'curl',             patterns: ['pull'] },
+  { match: 'triceps',          patterns: ['push'] },
+  { match: 'pushdown',         patterns: ['push'] },
+  { match: 'skull crusher',    patterns: ['push'] },
+  { match: 'chin-up',          patterns: ['pull'] },
   { match: 'scapular pull',    patterns: ['pull'] },
   { match: 'dead hang',        patterns: ['pull','carry'] },
   { match: 'lean-back',        patterns: ['pull'] },
   { match: 'assisted pull-up', patterns: ['pull'] },
   { match: 'knee tuck',        patterns: ['core'] },
   { match: 'leg lift',         patterns: ['core'] },
+  { match: 'leg raise',        patterns: ['core'] },
   { match: 'coil push-up',     patterns: ['push','rotation'] },
   { match: 'crawling push-up', patterns: ['push','core'] },
   { match: 'monkey push-up',   patterns: ['push','squat','rotation'] },
@@ -531,6 +628,7 @@ const PATTERN_OVERRIDES = [
   { match: 'wisselsprongen',   patterns: ['lunge','locomotion'] },
   { match: 'kniestoten',       patterns: ['lunge','core'] },
   { match: 'ab wheel',         patterns: ['core','anti-rotation'] },
+  { match: 'russian twist',    patterns: ['core','rotation'] },
   { match: 'hanging leg raise', patterns: ['core'] },
   { match: 'plank',            patterns: ['core','anti-rotation'] },
   { match: 'support hold',     patterns: ['push','core'] }
@@ -569,7 +667,8 @@ const PATTERN_KEYWORDS = [
   { kw: 'farmer',       p: ['carry'] },
   { kw: 'calf',         p: ['locomotion'] },
   { kw: 'kuitheffen',   p: ['locomotion'] },
-  { kw: 'run',          p: ['locomotion'] },
+  { kw: '5km run',      p: ['locomotion'] },
+  { kw: 'interval run', p: ['locomotion'] },
   { kw: 'double under',  p: ['locomotion'] }
 ];
 
