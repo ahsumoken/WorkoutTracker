@@ -186,6 +186,23 @@ const Session = (() => {
 
     const startBlock = document.createElement('div');
     startBlock.className = 'circuit-block';
+    if (def.forTime) {
+      startBlock.innerHTML = `
+        <div class="circuit-start-row">
+          <div>
+            <div class="circuit-start-label">${def.name}</div>
+            <div class="circuit-sub">Voor tijd · ${def.targetReps || ''} reps · klok loopt door</div>
+          </div>
+        </div>
+        <div class="fortime-wrap" style="padding:16px;text-align:center;">
+          <div id="fortime-clock" style="font-family:'Barlow Condensed',sans-serif;font-size:56px;font-weight:800;color:var(--accent-orange);letter-spacing:2px;">00:00</div>
+          <div style="display:flex;gap:10px;margin-top:12px;">
+            <button id="btn-fortime-start" class="btn-start-timer" style="flex:1;">▶ START</button>
+            <button id="btn-fortime-stop" class="btn-secondary" style="flex:1;display:none;">■ KLAAR</button>
+          </div>
+          <div id="fortime-hint" style="font-size:12px;color:var(--text-3);margin-top:10px;">Start de klok, doe je ${def.targetReps || ''} reps, tik KLAAR als je klaar bent.</div>
+        </div>`;
+    } else {
     startBlock.innerHTML = `
       <div class="circuit-start-row">
         <div>
@@ -202,9 +219,39 @@ const Session = (() => {
           <button id="btn-rounds-plus" style="width:32px;height:32px;background:var(--bg-3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">+</button>
         </div>
       </div>`;
+    }
 
     let selectedRounds = def.rounds;
-    
+
+    if (def.forTime) {
+      // Voor-tijd stopwatch: telt op, jij tikt KLAAR. Raakt de gewone timer niet.
+      let ftInterval = null, ftStart = 0;
+      const clockEl = startBlock.querySelector('#fortime-clock');
+      const btnStart = startBlock.querySelector('#btn-fortime-start');
+      const btnStop = startBlock.querySelector('#btn-fortime-stop');
+      function fmtFt(ms) {
+        const s = Math.floor(ms/1000); const m = Math.floor(s/60);
+        return String(m).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+      }
+      btnStart.addEventListener('click', () => {
+        ftStart = Date.now();
+        timerRunning = true;
+        document.getElementById('btn-finish').style.visibility = 'visible';
+        startClock();
+        saveState();
+        btnStart.style.display = 'none';
+        btnStop.style.display = 'block';
+        ftInterval = setInterval(() => { clockEl.textContent = fmtFt(Date.now() - ftStart); }, 250);
+      });
+      btnStop.addEventListener('click', () => {
+        if (ftInterval) clearInterval(ftInterval);
+        const elapsed = Date.now() - ftStart;
+        clockEl.textContent = fmtFt(elapsed);
+        btnStop.textContent = '✓ ' + fmtFt(elapsed);
+        btnStop.disabled = true;
+        showToast('Tijd: ' + fmtFt(elapsed) + ' 🔥');
+      });
+    } else {
     startBlock.querySelector('#btn-rounds-min').addEventListener('click', () => {
       if (selectedRounds > 1) { selectedRounds--; startBlock.querySelector('#rounds-display').textContent = selectedRounds; }
     });
@@ -227,6 +274,7 @@ const Session = (() => {
         });
       }
     });
+    }
 
     const exBlock = document.createElement('div');
     exBlock.className = 'circuit-block';

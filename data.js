@@ -429,20 +429,23 @@ const SESSION_TYPES = {
     rounds: 1,
     workSec: 0,
     restSec: 0,
+    forTime: true,
+    targetReps: 50,
     exercises: [
-      { name: 'Burpee (3 Push-ups) + 3 Jump Squats', defaultWeight: 'Vest 10kg' }
+      { name: 'Burpee (3 Push-ups) + 3 Jump Squats — 50 reps voor tijd', defaultWeight: 'Vest 10kg' }
     ]
   },
-  'bodyweight-murph': {
-    name: 'Bodyweight Murph Variant',
-    type: 'circuit',
-    rounds: 10,
-    workSec: 0,
-    restSec: 0,
+  'pullup-dev': {
+    name: 'Pull-up Development',
+    type: 'gym',
     exercises: [
-      { name: 'Negatieve Pull-ups', defaultWeight: 'Vest 10kg' },
-      { name: 'Dips / Push-ups', defaultWeight: 'Vest 10kg' },
-      { name: 'Air Squats', defaultWeight: 'Vest 10kg' }
+      { id: 'pd-scap', name: 'Scapular Pull-ups (schouderbladen)', sets: 3, reps: '8-10' },
+      { id: 'pd-band-pull', name: 'Band Pull-aparts (achterste schouder)', sets: 3, reps: '15-20' },
+      { id: 'pd-hollow', name: 'Hollow Hold (core/lichaamsspanning)', sets: 3, reps: 'max sec' },
+      { id: 'pd-neg', name: 'Negatieve Pull-ups (5s zakken)', sets: 3, reps: '5' },
+      { id: 'pd-facepull', name: 'Band Face Pulls (schouder/nek)', sets: 3, reps: '15' },
+      { id: 'pd-hang', name: 'Active Dead Hang (scapula actief)', sets: 3, reps: 'max sec' },
+      { id: 'pd-row', name: 'Ring/Band Row (rug)', sets: 3, reps: '10-12' }
     ]
   },
   'kb-rope-amrap': {
@@ -515,7 +518,7 @@ const SESSION_CATEGORY = {
   'alan-a': 'conditie', 'alan-b': 'conditie',
   'kb-fullbody': 'conditie', 'kb-rope-amrap': 'conditie', 'ring-quest': 'kracht', 'fullbody-core': 'conditie', 'fullbody-mix': 'conditie',
   'kb-flow': 'flow', 'kb-flow-terra': 'flow', 'kb-flow-spezia': 'flow', 'animal-pushups': 'flow',
-  'plyo-box-hiit': 'hiit', 'horse-legs': 'hiit', 'spartan-50': 'hiit', 'bodyweight-murph': 'hiit',
+  'plyo-box-hiit': 'hiit', 'horse-legs': 'hiit', 'spartan-50': 'hiit', 'pullup-dev': 'kracht',
   'kb-band-hiit': 'hiit',
   'bodyweight-25s': 'bodyweight', 'bw-pullburpsquat': 'bodyweight', 'bw-dipburplunge': 'bodyweight',
   'bw-vsitpushsquat': 'bodyweight', 'bw-upper': 'bodyweight', 'bw-lower': 'bodyweight',
@@ -565,7 +568,7 @@ const CARD_META = {
   'alan-a': { accent: "var(--accent-purple)", tag: "ALAN A", name: "Alan Hanik A", sub: "Step-up · RDL · Squat · Push-up", sets: "18 sets · 0:45/0:15 · 3 ronden" },
   'alan-b': { accent: "var(--accent-green)", tag: "ALAN B", name: "Alan Hanik B", sub: "Lunge · Swing · Ring Row · Split Squat", sets: "18 sets · 0:45/0:15 · 3 ronden" },
   'spartan-50': { accent: "var(--accent-red)", tag: "SPARTAN 50", name: "The Spartan 50", sub: "Burpees (3 Push-ups) + 3 Jump Squats", sets: "1 set · Gewichtsvest" },
-  'bodyweight-murph': { accent: "var(--accent-indigo)", tag: "MURPH", name: "Bodyweight Murph Variant", sub: "Negatieve Pull-ups · Dips · Air Squats", sets: "30 sets · 10 ronden · Met Vest" },
+  'pullup-dev': { accent: "var(--accent-blue)", tag: "PULL-UP DEV", name: "Pull-up Development", sub: "Scapular · Pull-aparts · Face Pulls · Dead Hang", sets: "7 oefeningen · schouders/scapula/rug · log reps" },
   'kb-rope-amrap': { accent: "var(--accent-rose)", tag: "AMRAP", name: "KB & Springtouw AMRAP", sub: "Double Unders · Cleans · Front Squats · Presses", sets: "20 minuten · Maximaal resultaat" },
   'ring-quest': { accent: "var(--accent-sky)", tag: "RING QUEST", name: "The Ring Quest", sub: "Ring Rows · Assisted Pull-ups · Support Holds", sets: "5 oefeningen · Kracht & Controle" },
   'snacks': { accent: "var(--accent-yellow)", tag: "SNACK", name: "Kettlebell Snacks", sub: "5 mini-workouts · 5-10 min", sets: "Power · Upper · Lower · Core · Full Body" },
@@ -609,6 +612,9 @@ const PATTERN_OVERRIDES = [
   { match: 'triceps',          patterns: ['push'] },
   { match: 'pushdown',         patterns: ['push'] },
   { match: 'skull crusher',    patterns: ['push'] },
+  { match: 'pull-apart',       patterns: ['pull'] },
+  { match: 'face pull',        patterns: ['pull'] },
+  { match: 'hollow hold',      patterns: ['core'] },
   { match: 'chin-up',          patterns: ['pull'] },
   { match: 'scapular pull',    patterns: ['pull'] },
   { match: 'dead hang',        patterns: ['pull','carry'] },
